@@ -1,0 +1,2102 @@
+[
+  {
+    "id": "q-001",
+    "text": "我就爛",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "自嘲擺爛、坦然面對失敗的網路熱梗"
+  },
+  {
+    "id": "q-002",
+    "text": "超派鐵拳",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "知名實況流行語，形容霸氣果斷的出擊"
+  },
+  {
+    "id": "q-003",
+    "text": "天青色等煙雨，而我在等你。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "周杰倫經典代表作《青花瓷》，方文山作詞的唯美中國風意境"
+  },
+  {
+    "id": "q-004",
+    "text": "小丑竟是我自己",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "自嘲以為掌控全域，最後卻發現自己自作多情"
+  },
+  {
+    "id": "q-005",
+    "text": "尊絕不凡",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "形容事物奢華誇張或反諷高端"
+  },
+  {
+    "id": "q-006",
+    "text": "是在哈囉",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣經典流行語，表達不可置信或對荒謬行為的幽默吐槽"
+  },
+  {
+    "id": "q-007",
+    "text": "賴和",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣新文學之父，仁心仁術行醫濟世，以筆為劍反映時代社會現實"
+  },
+  {
+    "id": "q-008",
+    "text": "馬偕博士",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "在台灣北部長年宣教行醫辦學，拔牙助人無數，創辦理學堂大書院"
+  },
+  {
+    "id": "q-009",
+    "text": "劉銘傳",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣首任巡撫，大力推動台灣第一條現代化鐵路與電報建設"
+  },
+  {
+    "id": "q-010",
+    "text": "紀政",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "被譽為「飛躍羚羊」，奧運女子田徑銅牌得主，曾屢破世界紀錄"
+  },
+  {
+    "id": "q-011",
+    "text": "李泰祥",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣音樂巨擘與編曲大師，譜寫《橄欖樹》《一條日光大道》傳唱千古"
+  },
+  {
+    "id": "q-012",
+    "text": "郭泓志",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣「不死鳥」，歷經多次手術重返大聯盟，入選全明星賽傳奇強投"
+  },
+  {
+    "id": "q-013",
+    "text": "鳳飛飛",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "被譽為「帽子歌后」，台灣國民天后，唱紅《掌聲響起》等時代溫暖心聲"
+  },
+  {
+    "id": "q-014",
+    "text": "楊傳廣",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "被譽為「亞洲鐵人」，台灣首位在奧運獲得十項全能銀牌的體壇傳奇"
+  },
+  {
+    "id": "q-015",
+    "text": "現在放棄的話，比賽就結束了。",
+    "category": "漫畫名言",
+    "difficulty": "medium",
+    "meaning": "《灌籃高手》湘北隊安西教練鼓勵三井壽時振奮人心的至理名言"
+  },
+  {
+    "id": "q-016",
+    "text": "這不好說",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "含蓄且耐人尋味的模糊回應"
+  },
+  {
+    "id": "q-017",
+    "text": "杰哥不要",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣宣導短片經典名台詞，成為風靡網路社群十餘年的知名迷因"
+  },
+  {
+    "id": "q-018",
+    "text": "阿姨我不想努力了",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "面對生活與職場龐大壓力時，幽默自嘲渴望解脫的網路流行語"
+  },
+  {
+    "id": "q-019",
+    "text": "尊師重道",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "尊敬師長並恪守正道的古今通念"
+  },
+  {
+    "id": "q-020",
+    "text": "求知若飢，虛心若愚。",
+    "category": "名人名言",
+    "difficulty": "easy",
+    "meaning": "賈伯斯 Steve Jobs 著名畢業演講引言：Stay hungry, stay foolish"
+  },
+  {
+    "id": "q-021",
+    "text": "心服口服",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "由衷佩服認可，從心底完全信服對方的傑出表現"
+  },
+  {
+    "id": "q-022",
+    "text": "廖添丁",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣日治時期民間傳奇英雄，其劫富濟貧、抗衡強權之傳說家喻戶曉"
+  },
+  {
+    "id": "q-023",
+    "text": "沈葆楨",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "清末推動台灣防務現代化重要大臣，修築億載金城並開拓東西越嶺道"
+  },
+  {
+    "id": "q-024",
+    "text": "這很合理",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "對意料之中或無奈荒謬之事的調侃認可"
+  },
+  {
+    "id": "q-025",
+    "text": "心心相印",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "彼此心意相通、互相珍惜理解的真摯美好情感"
+  },
+  {
+    "id": "q-026",
+    "text": "獨具慧眼",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "擁有敏銳深邃的觀察眼光，能看透本質識得大局"
+  },
+  {
+    "id": "q-027",
+    "text": "齊心協力",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "眾人同心合意，共同努力完成一項艱鉅的目標任務"
+  },
+  {
+    "id": "q-028",
+    "text": "勢如破竹",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "形勢如劈竹節般順暢無阻，展現勢不可擋的壓倒性優勢"
+  },
+  {
+    "id": "q-029",
+    "text": "神乎其技",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "形容技藝高超精湛到了不可思議的神奇境界"
+  },
+  {
+    "id": "q-030",
+    "text": "心照不宣",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "彼此心裡明白默契十足，無須明說即可完全體會"
+  },
+  {
+    "id": "q-031",
+    "text": "大人，時代變了。",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "源自影視台詞與網路迷因，比喻環境形勢或科技武器已經截然不同"
+  },
+  {
+    "id": "q-032",
+    "text": "這不是巧了嗎",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "碰上不可思議巧合時的幽默反問語"
+  },
+  {
+    "id": "q-033",
+    "text": "不要瞎掰好嗎",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣鄉民網路論壇經典名梗，幽默吐槽他人信口開河胡說八道"
+  },
+  {
+    "id": "q-034",
+    "text": "小孩子才做選擇，我全都要！",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "源自周星馳電影經典台詞，幽默表達不願妥協、兼收並蓄的豪氣"
+  },
+  {
+    "id": "q-035",
+    "text": "榮恩，這個比魔杖好用多了。",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "知名網路二次創作迷因名句，調侃現代實體工具比魔法更直接管用"
+  },
+  {
+    "id": "q-036",
+    "text": "笑死",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣網路社群極高頻出現的口頭禪，表示極度好笑或敷衍調侃"
+  },
+  {
+    "id": "q-037",
+    "text": "太狂了吧",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "形容某人表現極具魄力或行為驚世駭俗的驚嘆語"
+  },
+  {
+    "id": "q-038",
+    "text": "社交恐懼症",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "在人際交往中感到緊張焦慮的心態"
+  },
+  {
+    "id": "q-039",
+    "text": "要確定欸",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣流行反問句，對令人存疑或可能出錯之事表示再三確認"
+  },
+  {
+    "id": "q-040",
+    "text": "同島一命",
+    "category": "名言與金句",
+    "difficulty": "easy",
+    "meaning": "島上全體軍民命運休戚與共、團結一致共度難關的堅定信念"
+  },
+  {
+    "id": "q-041",
+    "text": "愛拚才會贏",
+    "category": "名言與金句",
+    "difficulty": "easy",
+    "meaning": "葉啟田經典閩南語勵志名曲，充分展現台灣人不屈不撓的拚搏精神"
+  },
+  {
+    "id": "q-042",
+    "text": "不可以色色",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣柴犬卡牌超人氣迷因，幽默勸導他人克制雜念保持純潔"
+  },
+  {
+    "id": "q-043",
+    "text": "好一朵美麗的茉莉花",
+    "category": "流行用語",
+    "difficulty": "hard",
+    "meaning": "傳唱世界的經典民謠歌曲名句"
+  },
+  {
+    "id": "q-044",
+    "text": "明天會更好",
+    "category": "名言與金句",
+    "difficulty": "easy",
+    "meaning": "台灣樂壇群星共同創作獻唱的公益名曲，向全社會傳遞光明與溫暖"
+  },
+  {
+    "id": "q-045",
+    "text": "佛心公司",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣遊戲論壇讚賞營運良心福利的口頭禪"
+  },
+  {
+    "id": "q-046",
+    "text": "很有畫面",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "形容文字或聲音描述極其生動傳神，彷彿眼前浮現鮮明景象"
+  },
+  {
+    "id": "q-047",
+    "text": "畫風突變",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "場景或氛圍瞬間轉變成截然不同的風格"
+  },
+  {
+    "id": "q-048",
+    "text": "沒在跟你開玩笑",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "強調態度絕對認真嚴肅，絕非隨口說說"
+  },
+  {
+    "id": "q-049",
+    "text": "我的青春結束了",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "看到青春偶像退役或作品完結時的傷感告白"
+  },
+  {
+    "id": "q-050",
+    "text": "小確幸",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "源自村上春樹文學概念，在台灣廣泛流行指微小而確實的幸福"
+  },
+  {
+    "id": "q-051",
+    "text": "我知道我的未來不是夢，我認真地過每一分鐘。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "台灣音樂傳奇張雨生代表作，鼓舞無數世代青年奮鬥追夢"
+  },
+  {
+    "id": "q-052",
+    "text": "打臉",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "源自台灣本土用語，指事實結果與先前吹噓不符被當面戳破"
+  },
+  {
+    "id": "q-053",
+    "text": "一言不合就開唱",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "形容情境突變，立刻開始唱歌表演的逗趣用語"
+  },
+  {
+    "id": "q-054",
+    "text": "人生若只如初見",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "納蘭性德詞句，感慨人事變遷不如當初純粹美好"
+  },
+  {
+    "id": "q-055",
+    "text": "我不是為了輸才打排球的。",
+    "category": "漫畫名言",
+    "difficulty": "medium",
+    "meaning": "《排球少年》主角日向翔陽面對強敵時永不言敗的純粹運動家精神"
+  },
+  {
+    "id": "q-056",
+    "text": "旋轉我",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣年輕世代流行語，意指「你在說話拐彎抹角敷衍我嗎」"
+  },
+  {
+    "id": "q-057",
+    "text": "我站在雲林",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "台灣社群熱門迷因空耳歌曲，旋律洗腦風靡全網"
+  },
+  {
+    "id": "q-058",
+    "text": "戰鬥力破表",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "戰力太過強大，突破儀器測量上限"
+  },
+  {
+    "id": "q-059",
+    "text": "願原力與你同在。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《星際大戰》絕地武士經典祝福語與信仰箴言"
+  },
+  {
+    "id": "q-060",
+    "text": "真心不騙",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "強調真誠坦率毫無虛言的台灣社群流行保證用語"
+  },
+  {
+    "id": "q-061",
+    "text": "齊柏林導演",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣空拍紀錄片大師，以《看見台灣》喚醒全民守護土地意識"
+  },
+  {
+    "id": "q-062",
+    "text": "王建民",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣棒球巨星，大聯盟紐約洋基隊連兩季十九勝傳奇投手"
+  },
+  {
+    "id": "q-063",
+    "text": "人生苦短我用Python",
+    "category": "流行用語",
+    "difficulty": "hard",
+    "meaning": "程式開發者圈讚嘆簡潔高效率的著名格言"
+  },
+  {
+    "id": "q-064",
+    "text": "萬物皆可聯名",
+    "category": "流行用語",
+    "difficulty": "medium",
+    "meaning": "商業世界中品牌跨界聯名無所不在的現象"
+  },
+  {
+    "id": "q-065",
+    "text": "真拿你沒辦法",
+    "category": "流行用語",
+    "difficulty": "easy",
+    "meaning": "無奈之中帶有包容與寵溺的日常用語"
+  },
+  {
+    "id": "q-066",
+    "text": "李白",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "唐代浪漫主義詩仙，留下無數千古名篇"
+  },
+  {
+    "id": "q-067",
+    "text": "杜甫",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "唐代現實主義詩聖，心懷天下百姓疾苦"
+  },
+  {
+    "id": "q-068",
+    "text": "蘇軾",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "宋代全能文學大師，字子瞻，號東坡居士"
+  },
+  {
+    "id": "q-069",
+    "text": "諸葛孔明",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "三國蜀漢丞相，鞠躬盡瘁死而後已的智慧化身"
+  },
+  {
+    "id": "q-070",
+    "text": "周杰倫",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "華語流行音樂天王，引領華語樂壇二十年跨時代傳奇"
+  },
+  {
+    "id": "q-071",
+    "text": "張惠妹",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "華語樂壇歌后，具備震撼人心的高亢靈魂唱腔"
+  },
+  {
+    "id": "q-072",
+    "text": "五月天阿信",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "五月天主唱，以溫暖詩意的歌詞陪伴無數人青春"
+  },
+  {
+    "id": "q-073",
+    "text": "李小龍",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "世界武術巨星，創立截拳道並將功夫推向全球"
+  },
+  {
+    "id": "q-074",
+    "text": "李安導演",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "首位榮獲兩屆奧斯卡最佳導演獎的華人傳奇導演"
+  },
+  {
+    "id": "q-075",
+    "text": "金庸",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "一代武俠小說宗師，筆下十五部經典膾炙人口"
+  },
+  {
+    "id": "q-076",
+    "text": "戴資穎",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "羽球天后，曾登世界球后寶座時間最長的傳奇好手"
+  },
+  {
+    "id": "q-077",
+    "text": "大谷翔平",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "現代棒球罕見的投打雙刀流超級巨星"
+  },
+  {
+    "id": "q-078",
+    "text": "林書豪",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "掀起「林來瘋」熱潮的知名華裔NBA控球後衛"
+  },
+  {
+    "id": "q-079",
+    "text": "蔣渭水",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣文化協會與台灣民眾黨創辦人，被譽為台灣新文化運動之父"
+  },
+  {
+    "id": "q-080",
+    "text": "林獻堂",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣議會設置請願運動領袖，霧峰林家代表人物，台灣自治先行者"
+  },
+  {
+    "id": "q-081",
+    "text": "黃土水",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣首位西洋雕塑大師與現代藝術先驅，代表作《甘露水》《水牛群像》被列為國寶"
+  },
+  {
+    "id": "q-082",
+    "text": "愛因斯坦",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "現代物理學之父，提出相對論改變人類時空認知"
+  },
+  {
+    "id": "q-083",
+    "text": "達文西",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "文藝復興全能天才，繪製蒙娜麗莎與無數科學發明"
+  },
+  {
+    "id": "q-084",
+    "text": "莎士比亞",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "英國文藝復興時期劇作家，創作出四大悲劇巨作"
+  },
+  {
+    "id": "q-085",
+    "text": "貝多芬",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "樂聖，在全聾境遇下依然譜寫出命運交響曲"
+  },
+  {
+    "id": "q-086",
+    "text": "莫札特",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "奧地利古典音樂神童，旋律如行雲流水般清澈純真"
+  },
+  {
+    "id": "q-087",
+    "text": "賈伯斯",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "蘋果公司聯合創辦人，以極致美學改變世界科技"
+  },
+  {
+    "id": "q-088",
+    "text": "宮崎駿",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "日本吉卜力動畫大師，創造龍貓、神隱少女等奇幻世界"
+  },
+  {
+    "id": "q-089",
+    "text": "新海誠",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "日本知名動畫導演，代表作《你的名字》《天氣之子》"
+  },
+  {
+    "id": "q-090",
+    "text": "手塚治虫",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "日本漫畫之神，開創現代故事漫畫的先行者"
+  },
+  {
+    "id": "q-091",
+    "text": "王羲之",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "晉代書聖，其《蘭亭集序》被譽為天下第一行書"
+  },
+  {
+    "id": "q-092",
+    "text": "陶淵明",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "東晉田園隱逸詩人之宗，採菊東籬下悠然見南山"
+  },
+  {
+    "id": "q-093",
+    "text": "曹操",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "三國魏武帝，具備雄才大略的政治家與慷慨詩人"
+  },
+  {
+    "id": "q-094",
+    "text": "司馬相如",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "西漢辭賦大家，與卓文君鳳求凰傳為千古佳話"
+  },
+  {
+    "id": "q-095",
+    "text": "屈原",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "戰國楚國愛國詩人，著有《離騷》《天問》千古流芳"
+  },
+  {
+    "id": "q-096",
+    "text": "白居易",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "唐代著名現實主義詩人，代表作《長恨歌》《琵琶行》"
+  },
+  {
+    "id": "q-097",
+    "text": "李清照",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "宋代婉約派詞人代表，號易安居士，千古第一才女"
+  },
+  {
+    "id": "q-098",
+    "text": "辛棄疾",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "南宋豪放派愛國詞人，沙場點兵氣勢磅礴"
+  },
+  {
+    "id": "q-099",
+    "text": "文天祥",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "南宋民族英雄，留下「人生自古誰無死」氣節長存"
+  },
+  {
+    "id": "q-100",
+    "text": "鄭成功",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "明鄭王朝開創者，歷史著名的延平郡王與民族先賢"
+  },
+  {
+    "id": "q-101",
+    "text": "孫中山先生",
+    "category": "名人與巨擘",
+    "difficulty": "medium",
+    "meaning": "中華民國國父，畢生倡導三民主義與博愛精神"
+  },
+  {
+    "id": "q-102",
+    "text": "海明威",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "美國硬漢小說家，代表作《老人與海》獲諾貝爾獎"
+  },
+  {
+    "id": "q-103",
+    "text": "梵谷",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "荷蘭後印象派天才畫家，代表作《星夜》《向日葵》"
+  },
+  {
+    "id": "q-104",
+    "text": "陳澄波",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "台灣近代西洋繪畫先驅，名作《嘉義街外》為首度入選日本帝展的台灣油畫"
+  },
+  {
+    "id": "q-105",
+    "text": "鄧麗君",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "亞洲歌姬、享譽國際的傳奇歌后，柔美純淨歌聲風靡全球華人世界"
+  },
+  {
+    "id": "q-106",
+    "text": "林懷民",
+    "category": "名人與巨擘",
+    "difficulty": "easy",
+    "meaning": "雲門舞集創辦人兼藝術總監，享譽世界的台灣現代舞編舞泰斗"
+  },
+  {
+    "id": "q-107",
+    "text": "還記得你說家是唯一的城堡，隨著稻香河流繼續奔跑。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "周杰倫經典溫暖勵志名曲《稻香》，撫慰無數心靈回歸初心"
+  },
+  {
+    "id": "q-108",
+    "text": "颳風這天我試過握著妳手。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "周杰倫傳唱度極高的經典校園青春抒情曲《晴天》"
+  },
+  {
+    "id": "q-109",
+    "text": "讓我將妳心兒摘下，試著將它慢慢融化。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "台灣搖滾巨擘伍佰經典情歌《挪威的森林》，詩意而狂熱動人"
+  },
+  {
+    "id": "q-110",
+    "text": "不要再想妳，不要再愛妳，讓時間悄悄的飛逝。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "伍佰浪人搖滾抒情名作《浪人情歌》，流淌男子漢的深情滄桑"
+  },
+  {
+    "id": "q-111",
+    "text": "如果大海能夠喚回曾經的愛，就讓我用一生等待。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "張雨生跨時代傳奇高音名作《大海》，氣勢磅礡、真摯深刻"
+  },
+  {
+    "id": "q-112",
+    "text": "哪朵玫瑰沒有荊棘，最好的報復是美麗。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "蔡依林金曲獎年度歌曲《玫瑰少年》，溫柔擁抱多元與獨特"
+  },
+  {
+    "id": "q-113",
+    "text": "池塘邊的榕樹上，知了在聲聲叫著夏天。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "台灣民歌與流行音樂教父羅大佑《童年》，勾勒無憂無慮的純真記憶"
+  },
+  {
+    "id": "q-114",
+    "text": "流水它帶走光陰的故事，改變了一個人。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "羅大佑經典金曲《光陰的故事》，感慨歲月流轉與青春成長"
+  },
+  {
+    "id": "q-115",
+    "text": "如果可以，我想和你看每個日落。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "台灣創作才子韋禮安影視主題曲《如果可以》，深情浪漫紅遍大街小巷"
+  },
+  {
+    "id": "q-116",
+    "text": "原來你是我最想留住的幸運。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "田馥甄 Hebe 經典代表作《小幸運》，唱出青春最刻骨銘心的悸動"
+  },
+  {
+    "id": "q-117",
+    "text": "這是一首簡單的小情歌，唱著我們心頭的白鴿。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "蘇打綠（吳青峰詞曲）清新純淨的國民名曲《小情歌》"
+  },
+  {
+    "id": "q-118",
+    "text": "你蒐集了地圖上每一次的風和日麗。",
+    "category": "經典歌詞",
+    "difficulty": "medium",
+    "meaning": "陳綺貞文青抒情代表作《旅行的意義》，探尋探索世界與愛情的真諦"
+  },
+  {
+    "id": "q-119",
+    "text": "想要我的財寶嗎？去大海找吧！",
+    "category": "漫畫名言",
+    "difficulty": "medium",
+    "meaning": "《航海王》大海賊哥爾·D·羅傑掀起偉大航道波瀾壯闊時代的名言"
+  },
+  {
+    "id": "q-120",
+    "text": "不戰鬥就贏不了，不戰鬥就活不下去。",
+    "category": "漫畫名言",
+    "difficulty": "medium",
+    "meaning": "《進擊的巨人》艾連·葉卡在絕境中激發生存意志的震撼名言"
+  },
+  {
+    "id": "q-121",
+    "text": "生殺予奪之權，不要交給別人！",
+    "category": "漫畫名言",
+    "difficulty": "medium",
+    "meaning": "《鬼滅之刃》水柱富岡義勇當頭棒喝喚醒炭治郎自立自強的名言"
+  },
+  {
+    "id": "q-122",
+    "text": "會贏喔。",
+    "category": "漫畫名言",
+    "difficulty": "easy",
+    "meaning": "《咒術迴戰》最強術師五條悟展現絕對實力與信心的經典台詞"
+  },
+  {
+    "id": "q-123",
+    "text": "人生就像一盒巧克力，你永遠不知道下一顆是什麼味道。",
+    "category": "名人名言",
+    "difficulty": "hard",
+    "meaning": "奧斯卡經典名片《阿甘正傳》中阿甘母親傳授的人生哲理金句"
+  },
+  {
+    "id": "q-124",
+    "text": "把每一天都當作生命的最後一天來過。",
+    "category": "名人名言",
+    "difficulty": "medium",
+    "meaning": "蘋果創辦人賈伯斯 Steve Jobs 於史丹佛大學演講分享之生命智慧"
+  },
+  {
+    "id": "q-125",
+    "text": "即使沒有天分，只要付出十倍努力，也能走出自己的路。",
+    "category": "名人名言",
+    "difficulty": "hard",
+    "meaning": "台灣羽球傳奇世界球后戴資穎苦練不輟、勇闖巔峰的勵志心態"
+  },
+  {
+    "id": "q-126",
+    "text": "真相永遠只有一個！",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "名偵探柯南招牌口頭禪，堅持追求案件唯一真相"
+  },
+  {
+    "id": "q-127",
+    "text": "安西教練，我想打籃球！",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "灌籃高手三井壽痛改前非浪子回頭的感人名場面"
+  },
+  {
+    "id": "q-128",
+    "text": "既然你誠心誠意的發問了，我就大發慈悲的告訴你！",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《精靈寶可夢》火箭隊武藏與小次郎經典登場開場白"
+  },
+  {
+    "id": "q-129",
+    "text": "我是要成為航海王的男人！",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《航海王》蒙其·D·魯夫堅持夢想永不放棄的熱血名言"
+  },
+  {
+    "id": "q-130",
+    "text": "做人如果沒夢想，跟鹹魚有何分別？",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "周星馳《少林足球》鼓舞人們堅持理想的經典台詞"
+  },
+  {
+    "id": "q-131",
+    "text": "別急，讓子彈飛一會兒。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "電影《讓子彈飛》張麻子沉著淡定的經典名台詞"
+  },
+  {
+    "id": "q-132",
+    "text": "同是天涯淪落人相逢何必曾相識",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "白居易琵琶行千古名句，身處逆境惺惺相惜之情"
+  },
+  {
+    "id": "q-133",
+    "text": "敝人，張麻子。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "電影《讓子彈飛》張牧之亮明身份時的沉著宣言"
+  },
+  {
+    "id": "q-134",
+    "text": "我的未來不是夢",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "張雨生傳唱世代的經典勵志金曲，勉勵認真度過每一刻追尋夢想"
+  },
+  {
+    "id": "q-135",
+    "text": "如果道歉有用，要警察幹嘛？",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "經典偶像劇《流星花園》道明寺霸道標誌台詞"
+  },
+  {
+    "id": "q-136",
+    "text": "天下無不散之筵席",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "再美好的相聚終有告別之時，順應人情聚散"
+  },
+  {
+    "id": "q-137",
+    "text": "這種時候，只要微笑就可以了。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "新世紀福音戰士碇真嗣對綾波零說的經典撫慰"
+  },
+  {
+    "id": "q-138",
+    "text": "錯的不是我，是這個世界！",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "東京喰種金木研在痛苦極致中覺醒黑化的震撼名句"
+  },
+  {
+    "id": "q-139",
+    "text": "人沒有犧牲就什麼都得不到，為了得到什麼，就必須付出同等的代價。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "《鋼之鍊金術師》等價交換原則與人生至理"
+  },
+  {
+    "id": "q-140",
+    "text": "生而為人，我很抱歉。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "太宰治《人間失格》體現內心痛苦自卑的感慨"
+  },
+  {
+    "id": "q-141",
+    "text": "人生就像一盒巧克力，你永遠不知道下一顆是什麼味道。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《阿甘正傳》名言：你永遠不知道下一顆是什麼味道"
+  },
+  {
+    "id": "q-142",
+    "text": "世界上只有一種真正的英雄主義，就是認清生活的真相後依然熱愛生活。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "羅曼羅蘭名言：認清生活的真相後依然熱愛生活"
+  },
+  {
+    "id": "q-143",
+    "text": "站起來，向前走，你不是還有雙健全的腿嗎？",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《鋼之鍊金術師》愛德華對迷茫者激勵人心的經典名言"
+  },
+  {
+    "id": "q-144",
+    "text": "如果能享受過程，比起想要的結果，一定會遇到更珍貴的事物。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "《獵人》金·富力士對小傑所言的冒險哲理"
+  },
+  {
+    "id": "q-145",
+    "text": "當你凝視深淵，深淵也凝視著你。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "尼采哲學名言，提醒人們警惕對抗惡意時被其同化"
+  },
+  {
+    "id": "q-146",
+    "text": "死亡不是失去生命，而是走出時間。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "《星際效應》探討愛與時間穿透維度的深奧哲理"
+  },
+  {
+    "id": "q-147",
+    "text": "人生不能像做菜，把所有的料都準備好了才下鍋。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "李安電影《飲食男女》道破生活總充滿變數"
+  },
+  {
+    "id": "q-148",
+    "text": "我們一路奮戰不是為了改變世界，而是為了不讓世界改變我們。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "電影《熔爐》名句：而是為了不讓世界改變我們"
+  },
+  {
+    "id": "q-149",
+    "text": "沉默是金，但有時候說出真相需要更大的勇氣。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《獵人》酷拉皮卡冷靜深邃的心境與信念"
+  },
+  {
+    "id": "q-150",
+    "text": "所謂的魔法，就是想像的世界。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《葬送的芙莉蓮》大魔法使弗蘭梅傳授之魔法本質哲理"
+  },
+  {
+    "id": "q-151",
+    "text": "就算只有百分之一的希望，我們也絕不能放棄。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《葬送的芙莉蓮》勇者欣梅爾激勵隊友勇往直前的光芒"
+  },
+  {
+    "id": "q-152",
+    "text": "天生我材必有用千金散盡還復來",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "李白將進酒千古豪邁名篇，深信天生之才必有用武之地"
+  },
+  {
+    "id": "q-153",
+    "text": "畢竟，明天又是全新的一天。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "《亂世佳人》經典結尾台詞，對未來始終懷抱希望"
+  },
+  {
+    "id": "q-154",
+    "text": "你把大哥吹死了。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "電影《讓子彈飛》經典荒誕幽默名台詞"
+  },
+  {
+    "id": "q-155",
+    "text": "不要溫和地走進那個良夜。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "迪倫湯瑪斯詩句，勉勵生命在暮年也要怒斥光陰消逝"
+  },
+  {
+    "id": "q-156",
+    "text": "凡殺不死我的，必使我更強大。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "尼采經典箴言，經歷磨難砥礪出更堅韌的身心"
+  },
+  {
+    "id": "q-157",
+    "text": "我聽出來了，你們都個個身懷絕技。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "經典影視台詞，形容身邊眾人各懷奇技絕學"
+  },
+  {
+    "id": "q-158",
+    "text": "生如夏花之絢爛，死如秋葉之靜美。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "泰戈爾飛鳥集詩句，對生命最極致浪漫的禮讚"
+  },
+  {
+    "id": "q-159",
+    "text": "落紅不是無情物化作春泥更護花",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "龔自珍己亥雜詩，抒發甘願化為春泥滋養後進的崇高胸懷"
+  },
+  {
+    "id": "q-160",
+    "text": "人生到處知何似恰似飛鴻踏雪泥",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "蘇軾和子由澠池懷舊名篇，感嘆人生萍蹤無定如雪泥鴻爪"
+  },
+  {
+    "id": "q-161",
+    "text": "那是最好的時代，也是最壞的時代。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "狄更斯《雙城記》舉世聞名的開篇哲思名句"
+  },
+  {
+    "id": "q-162",
+    "text": "真正重要的東西，用眼睛是看不見的。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "聖修伯里《小王子》狐狸教給小王子的生命真諦"
+  },
+  {
+    "id": "q-163",
+    "text": "莫愁前路無知己天下誰人不識君",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "高適別董大名篇，豪氣干雲寬慰好友前程似錦"
+  },
+  {
+    "id": "q-164",
+    "text": "滿地都是六便士，他卻抬頭看見了月亮。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "毛姆《月亮與六便士》比喻在庸俗現實中守護理想"
+  },
+  {
+    "id": "q-165",
+    "text": "人人生而自由平等",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "人權宣言核心精神，奠定現代文明價值的基石理念"
+  },
+  {
+    "id": "q-166",
+    "text": "知行合一止於至善",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "王陽明心學哲學理念，理論與實踐深度融合追求完美"
+  },
+  {
+    "id": "q-167",
+    "text": "讀萬卷書行萬里路",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "董其昌名言，勉勵人既要認真研讀經典，更當走訪名山大川開闊胸襟"
+  },
+  {
+    "id": "q-168",
+    "text": "走自己的路，讓別人說去吧！",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "但丁神曲名言，堅持自己正確原則不為閒言碎語所惑"
+  },
+  {
+    "id": "q-169",
+    "text": "路是人走出來的",
+    "category": "名言與金句",
+    "difficulty": "easy",
+    "meaning": "民間流傳廣遠的勵志名言，勉勵勇於開創新局，不懼艱難踏出第一步"
+  },
+  {
+    "id": "q-170",
+    "text": "幸福的家庭都是相似的，不幸的家庭各有各的不幸。",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "列夫·托爾斯泰《安娜·卡列尼娜》經典開篇名言"
+  },
+  {
+    "id": "q-171",
+    "text": "永遠年輕，永遠熱淚盈眶。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "凱魯亞克小說名句，永遠保持對世界的熱情與感動"
+  },
+  {
+    "id": "q-172",
+    "text": "即使在最黑暗的深淵，也存在著尋求光明的意志。",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "卡夫卡文學作品所展現的深刻人性思考與存在哲理"
+  },
+  {
+    "id": "q-173",
+    "text": "一花一世界一葉一菩提",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "佛家經典禪宗思想，自微小細節中參透宇宙大千世界"
+  },
+  {
+    "id": "q-174",
+    "text": "寵辱不驚看庭前花開花落",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "菜根譚豁達心境名句，淡泊看待人間名利榮辱起伏"
+  },
+  {
+    "id": "q-175",
+    "text": "去留無意望天上雲卷雲舒",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "菜根譚下半聯，心靈宛如流雲舒捲自如無牽無掛"
+  },
+  {
+    "id": "q-176",
+    "text": "海納百川有容乃大",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "林則徐自勉名聯，海胸襟開闊包容一切始顯偉大"
+  },
+  {
+    "id": "q-177",
+    "text": "壁立千仞無欲則剛",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "峭壁高聳千仞，內心沒有非分私慾才能剛正不阿"
+  },
+  {
+    "id": "q-178",
+    "text": "天道酬勤商道酬信",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "上天眷顧勤勉之人，商業成功本於誠信立身"
+  },
+  {
+    "id": "q-179",
+    "text": "大道至簡悟在天成",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "最高明的道理往往極其質樸，領悟源於順應自然規律"
+  },
+  {
+    "id": "q-180",
+    "text": "厚德載物自強不息",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "易經君子精神，內修寬厚品德外展永不懈怠之志"
+  },
+  {
+    "id": "q-181",
+    "text": "靜以修身儉以養德",
+    "category": "名言與金句",
+    "difficulty": "medium",
+    "meaning": "諸葛亮誡子書家訓，清靜能修養心性，節儉能培養品德"
+  },
+  {
+    "id": "q-182",
+    "text": "非淡泊無以明志非寧靜無以致遠",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "諸葛孔明名訓，心境不淡泊無法堅定志向，不寧靜不能走遠"
+  },
+  {
+    "id": "q-183",
+    "text": "書山有路勤為徑學海無涯苦作舟",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "千古勸學治學名聯，勤奮與刻苦乃求知必經之路"
+  },
+  {
+    "id": "q-184",
+    "text": "寶劍鋒從磨礪出梅花香自苦寒來",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "歷練成就非凡本領，梅花經霜雪考驗始發幽香"
+  },
+  {
+    "id": "q-185",
+    "text": "問渠那得清如許為有源頭活水來",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "朱熹觀書有感名句，心靈思維需不斷吸納新知方能澄明"
+  },
+  {
+    "id": "q-186",
+    "text": "長風破浪會有時直掛雲帆濟滄海",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "李白行路難豪邁結尾，堅信終能乘長風跨越滄海汪洋"
+  },
+  {
+    "id": "q-187",
+    "text": "大鵬一日同風起扶搖直上九萬里",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "李白昂揚鬥志詩句，比喻胸懷大志者終有展翅騰飛一日"
+  },
+  {
+    "id": "q-188",
+    "text": "莫等閒白了少年頭空悲切",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "岳飛滿江紅激昂警句，切莫虛擲大好青春徒留悲嘆悔恨"
+  },
+  {
+    "id": "q-189",
+    "text": "不畏浮雲遮望眼自緣身在最高層",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "王安石登飛來峰哲思，站得高遠便不被表面假象所迷惑"
+  },
+  {
+    "id": "q-190",
+    "text": "路漫漫其修遠兮吾將上下而求索",
+    "category": "名言與金句",
+    "difficulty": "hard",
+    "meaning": "屈原離騷名句，追尋真理道路漫長而意志百折不回"
+  },
+  {
+    "id": "q-191",
+    "text": "風和日麗",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "和風微拂，陽光晴和，形容天氣極好"
+  },
+  {
+    "id": "q-192",
+    "text": "海闊天空",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "天地無比廣闊，亦比喻心胸開朗開闊"
+  },
+  {
+    "id": "q-193",
+    "text": "春暖花開",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "春天氣候溫和，百花爭相盛放的生機盎然"
+  },
+  {
+    "id": "q-194",
+    "text": "全力以赴",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "將所有的智慧與力量全部傾注投入其中"
+  },
+  {
+    "id": "q-195",
+    "text": "飲水思源",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "喝水時感恩水源，比喻不忘本、心懷感激"
+  },
+  {
+    "id": "q-196",
+    "text": "心曠神怡",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "心境豁達開朗，神情舒暢愉悅"
+  },
+  {
+    "id": "q-197",
+    "text": "日新月異",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "每天每月都在更新進步，形容科技時代發展迅速"
+  },
+  {
+    "id": "q-198",
+    "text": "堅持不懈",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "持之以恆毫不鬆懈，堅持到底直至成功"
+  },
+  {
+    "id": "q-199",
+    "text": "循序漸進",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "按照一定的規律與先後次序逐步推進"
+  },
+  {
+    "id": "q-200",
+    "text": "學以致用",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "將所學習到的知識與學問切實應用於日常實踐"
+  },
+  {
+    "id": "q-201",
+    "text": "一鳴驚人",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "平時默默積累無聲，一旦發揮便震驚四座獲得讚譽"
+  },
+  {
+    "id": "q-202",
+    "text": "金石為開",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "只要精誠意念所至，即使頑硬金石也能被開鑿"
+  },
+  {
+    "id": "q-203",
+    "text": "登峰造極",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "登上最高山峰，比喻學術技藝達到極致造詣"
+  },
+  {
+    "id": "q-204",
+    "text": "熟能生巧",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "反覆熟練操作後，自然能靈巧掌握箇中巧妙訣竅"
+  },
+  {
+    "id": "q-205",
+    "text": "見微知著",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "看到細微微小的萌芽苗頭，便能預先洞察重大發展"
+  },
+  {
+    "id": "q-206",
+    "text": "集思廣益",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "廣泛匯集眾人的智慧與思考，取得更圓滿周詳的成果"
+  },
+  {
+    "id": "q-207",
+    "text": "推陳出新",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "剔除陳舊過時之物，推陳展現新穎進步的創新品格"
+  },
+  {
+    "id": "q-208",
+    "text": "實事求是",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "從客觀實際情況出發，探求真理本質而不務空名"
+  },
+  {
+    "id": "q-209",
+    "text": "力爭上游",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "勉勵自己奮發圖強，努力爭取達到最優秀的水準"
+  },
+  {
+    "id": "q-210",
+    "text": "未雨綢繆",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "趁著天還沒下雨預先修補房屋，比喻事先防患未然"
+  },
+  {
+    "id": "q-211",
+    "text": "居安思危",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "處在平安穩定的環境中，隨時保持警惕思考潛在危機"
+  },
+  {
+    "id": "q-212",
+    "text": "迎刃而解",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "劈竹順著刀口剖開，比喻主要癥結解決後其他事順理成章"
+  },
+  {
+    "id": "q-213",
+    "text": "妙筆生花",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "稱讚文筆才華超群出眾，所寫文章生動優美神采奕奕"
+  },
+  {
+    "id": "q-214",
+    "text": "爐火純青",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "道家煉丹爐火變青象徵成功，比喻技藝功夫達到純熟境界"
+  },
+  {
+    "id": "q-215",
+    "text": "水滴石穿",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "水滴不斷滴落能穿透堅石，比喻微小力量持久能成大事"
+  },
+  {
+    "id": "q-216",
+    "text": "百尺竿頭更進一步",
+    "category": "經典成語",
+    "difficulty": "medium",
+    "meaning": "已經達到極高境界，依然力求突破精益求精"
+  },
+  {
+    "id": "q-217",
+    "text": "差之毫釐謬以千里",
+    "category": "經典成語",
+    "difficulty": "medium",
+    "meaning": "開始時只有極微小的差錯，最終結果卻相差極其懸遠"
+  },
+  {
+    "id": "q-218",
+    "text": "防微杜漸",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "在錯誤或不良苗頭剛顯現時就加以防範制止"
+  },
+  {
+    "id": "q-219",
+    "text": "臥薪嘗膽",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "越王勾踐刻苦自勵雪恥復國的堅韌毅力代表成語"
+  },
+  {
+    "id": "q-220",
+    "text": "破釜沉舟",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "項羽砸破炊具燒毀渡船，表示斷絕後路決一死戰的勇氣"
+  },
+  {
+    "id": "q-221",
+    "text": "朝氣蓬勃",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "形容充滿青春活力與蓬勃向上的精神面貌"
+  },
+  {
+    "id": "q-222",
+    "text": "豁然開朗",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "眼前視野或心中疑惑瞬間明朗通透的暢快之感"
+  },
+  {
+    "id": "q-223",
+    "text": "溫故知新",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "溫習舊有的知識學問，從中獲得全新領悟與啟發"
+  },
+  {
+    "id": "q-224",
+    "text": "孜孜不倦",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "勤奮努力不知疲倦，常形容認真治學與工作的態度"
+  },
+  {
+    "id": "q-225",
+    "text": "廢寢忘食",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "顧不得睡覺忘了吃飯，形容全神貫注專心致志"
+  },
+  {
+    "id": "q-226",
+    "text": "胸有成竹",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "畫竹前心中已有完整竹形，比喻做事前已有全盤把握"
+  },
+  {
+    "id": "q-227",
+    "text": "臨機應變",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "面臨突發情境時能隨機應變，採取最適當的處置措施"
+  },
+  {
+    "id": "q-228",
+    "text": "絡繹不絕",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "車馬行人或各類訪客往來頻繁連續不斷"
+  },
+  {
+    "id": "q-229",
+    "text": "巧奪天工",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "人工技藝之精巧勝過天然造化，形容技藝絕倫"
+  },
+  {
+    "id": "q-230",
+    "text": "美不勝收",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "美好美麗的事物景象太多，讓人目不暇給欣賞不盡"
+  },
+  {
+    "id": "q-231",
+    "text": "怡然自得",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "心情平靜安寧悠閒自適的愜意神態"
+  },
+  {
+    "id": "q-232",
+    "text": "隨遇而安",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "身處任何環境處境都能安然適應自在自得"
+  },
+  {
+    "id": "q-233",
+    "text": "精益求精",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "好了還要求更好，對品質與技藝永遠追求極致卓越"
+  },
+  {
+    "id": "q-234",
+    "text": "開卷有益",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "打開書本閱讀必定有所收穫啟發，勸人多讀書"
+  },
+  {
+    "id": "q-235",
+    "text": "舉一反三",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "從列舉的一件事類推領會同類的三件事，形容領悟力強"
+  },
+  {
+    "id": "q-236",
+    "text": "腳踏實地",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "做事踏實認真穩健，不浮躁不追求虛名幻想"
+  },
+  {
+    "id": "q-237",
+    "text": "雷厲風行",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "像雷電霹靂暴風颳過一般，形容執行政策命令迅猛有力"
+  },
+  {
+    "id": "q-238",
+    "text": "頂天立地",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "頭頂青天腳踏大地，形容人格光明磊落頂天立地"
+  },
+  {
+    "id": "q-239",
+    "text": "光明磊落",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "胸懷坦蕩純潔，言行舉止堂堂正正問心無愧"
+  },
+  {
+    "id": "q-240",
+    "text": "深謀遠慮",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "周密深刻的謀劃，長遠深入的考量佈局"
+  },
+  {
+    "id": "q-241",
+    "text": "同舟共濟",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "同乘一艘船橫渡風浪，比喻團結一心共同戰勝困難挑戰"
+  },
+  {
+    "id": "q-242",
+    "text": "休戚與共",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "憂喜禍福緊密相連休戚相關，彼此命運同舟共濟"
+  },
+  {
+    "id": "q-243",
+    "text": "萬象更新",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "新春或新時代來臨，宇宙間萬事萬物展現欣欣向榮新面貌"
+  },
+  {
+    "id": "q-244",
+    "text": "返璞歸真",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "去掉外在虛飾與浮華雕琢，回歸生命本真的質樸純真"
+  },
+  {
+    "id": "q-245",
+    "text": "和衷共濟",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "心意一致齊心協力，同心同德克服難關難局"
+  },
+  {
+    "id": "q-246",
+    "text": "大智若愚",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "真正具有大智慧的人往往外表質樸謙和不露鋒芒"
+  },
+  {
+    "id": "q-247",
+    "text": "虛懷若谷",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "胸襟寬廣虛心謙遜宛如空谷能容納萬物"
+  },
+  {
+    "id": "q-248",
+    "text": "寧靜致遠",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "心境保持專注安寧，方能洞察事物本質走得長遠"
+  },
+  {
+    "id": "q-249",
+    "text": "明鏡高懸",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "鏡子高高懸掛映照毫髮，比喻執法公正嚴明洞燭奸邪"
+  },
+  {
+    "id": "q-250",
+    "text": "厚積薄發",
+    "category": "經典成語",
+    "difficulty": "easy",
+    "meaning": "長久充分的積累醞釀，方能厚積而爆發出驚人光彩"
+  },
+  {
+    "id": "q-251",
+    "text": "千里之行，始於足下。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "老子名言：千里遠的征程也是從腳下第一步開始邁出的"
+  },
+  {
+    "id": "q-252",
+    "text": "學而不思則罔，思而不學則殆。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "論語經典：只讀書不思考會迷惘，只思考不讀書會危險"
+  },
+  {
+    "id": "q-253",
+    "text": "欲窮千里目，更上一層樓。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "王之渙登鸛雀樓：若想看清更遠遼闊景色，需登上更高樓層"
+  },
+  {
+    "id": "q-254",
+    "text": "不積跬步，無以至千里。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "荀子勸學：不積累半步一步的腳印，無法抵達千里遠方"
+  },
+  {
+    "id": "q-255",
+    "text": "落霞與孤鶩齊飛，秋水共長天一色。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "王勃滕王閣序千古寫景名句，天地水天一色雄奇壯麗"
+  },
+  {
+    "id": "q-256",
+    "text": "海內存知己，天涯若比鄰。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "王勃送杜少府之任蜀州：四海有知心好友，天涯亦如鄰居"
+  },
+  {
+    "id": "q-257",
+    "text": "紙上得來終覺淺，絕知此事要躬行。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "陸游冬夜讀書示子聿：書本知識終究有限，真知源於實踐"
+  },
+  {
+    "id": "q-258",
+    "text": "山重水複疑無路，柳暗花明又一村。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "陸游遊山西村：困頓彷徨時穿過綠柳繁花忽然出現生機"
+  },
+  {
+    "id": "q-259",
+    "text": "工欲善其事，必先利其器。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "論語孔子名言：工匠若要做好工作，必須先磨礪精良工具"
+  },
+  {
+    "id": "q-260",
+    "text": "知之者不如好之者，好之者不如樂之者。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "論語論述學習至高境界：懂得不如喜好，喜好不如熱愛"
+  },
+  {
+    "id": "q-261",
+    "text": "博學之，審問之，慎思之，明辨之，篤行之。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "中庸求知五境界：廣泛學、詳細問、慎重思、明確辨、踏實行"
+  },
+  {
+    "id": "q-262",
+    "text": "天行健，君子以自強不息。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "易經乾卦卦辭：天道運行剛健不息，君子當自我奮發圖強"
+  },
+  {
+    "id": "q-263",
+    "text": "地勢坤，君子以厚德載物。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "易經坤卦卦辭：大地寬廣順承萬物，君子當以寬厚德行容納"
+  },
+  {
+    "id": "q-264",
+    "text": "三人行，必有我師焉；擇其善者而從之。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "論語謙虛求教格言：同行者必有值得學習之處，擇善而從"
+  },
+  {
+    "id": "q-265",
+    "text": "己所不欲，勿施於人。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "論語忠恕之道核心：自己所不願意承受的，不要強加他人"
+  },
+  {
+    "id": "q-266",
+    "text": "見賢思齊焉，見不賢而內自省也。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "論語修身箴言：見優秀者想向其看齊，見不善者反省自我"
+  },
+  {
+    "id": "q-267",
+    "text": "君子坦蕩蕩，小人長戚戚。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "孔子論述品格差異：君子心胸光明坦蕩，小人心懷憂戚得失"
+  },
+  {
+    "id": "q-268",
+    "text": "歲寒，然後知松柏之後凋也。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "論語名言：經過寒冬考驗，才能彰顯松柏青翠堅忍的品質"
+  },
+  {
+    "id": "q-269",
+    "text": "臨淵羨魚，不如退而結網。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "淮南子名言：在水潭邊空羨慕游魚，不如退回動手編織魚網"
+  },
+  {
+    "id": "q-270",
+    "text": "玉不琢，不成器；人不學，不知道。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "禮記學記名言：美玉不經雕琢不成器物，人不學習不明道理"
+  },
+  {
+    "id": "q-271",
+    "text": "居廟堂之高則憂其民，處江湖之遠則憂其君。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "范仲淹岳陽樓記：不論身居官位或身處民間皆牽掛家國"
+  },
+  {
+    "id": "q-272",
+    "text": "不以物喜，不以己悲。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "范仲淹岳陽樓記名言：不因外物好壞而喜悅，不因個人得失而悲傷"
+  },
+  {
+    "id": "q-273",
+    "text": "先天下之憂而憂，後天下之樂而樂。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "范仲淹岳陽樓記政治情懷：天下之憂先於己，天下之樂後於己"
+  },
+  {
+    "id": "q-274",
+    "text": "會當凌絕頂，一覽眾山小。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "杜甫望岳名篇豪語：終將登上泰山最高峰，俯瞰群山之渺小"
+  },
+  {
+    "id": "q-275",
+    "text": "安得廣廈千萬間，大庇天下寒士俱歡顏！",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "杜甫茅屋為秋風所破歌：渴望天下所有人皆能安居樂業"
+  },
+  {
+    "id": "q-276",
+    "text": "竹杖芒鞋輕勝馬，誰怕？一蓑煙雨任平生。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "蘇軾定風波詞句：雨中拄竹杖穿草鞋前行，何懼人生風雨煙塵"
+  },
+  {
+    "id": "q-277",
+    "text": "回首向來蕭瑟處，歸去，也無風雨也無晴。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "蘇軾定風波豁達結尾：回望平生歷經坎坷，皆已雲淡風輕"
+  },
+  {
+    "id": "q-278",
+    "text": "大江東去，浪淘盡，千古風流人物。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "蘇軾念奴嬌赤壁懷古開篇：長江滾滾東流洗盡多少英雄豪傑"
+  },
+  {
+    "id": "q-279",
+    "text": "羽扇綸巾，談笑間，檣櫓灰飛煙滅。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "蘇軾念奴嬌形容周瑜赤壁大捷瀟灑指揮若定之風采"
+  },
+  {
+    "id": "q-280",
+    "text": "人生如夢，一尊還酹江月。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "蘇軾感嘆人生如同大夢一場，舉起酒杯灑向江中倒映之月"
+  },
+  {
+    "id": "q-281",
+    "text": "明月幾時有？把酒問青天。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "蘇軾水調歌頭中秋詞名句：端起酒杯仰望浩瀚夜空詢問明月"
+  },
+  {
+    "id": "q-282",
+    "text": "但願人長久，千里共嬋娟。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "蘇軾水調歌頭千古名句：只期盼親友平安長壽，共賞千里明月"
+  },
+  {
+    "id": "q-283",
+    "text": "世事一場大夢，人生幾度秋涼？",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "蘇軾西江月感傷詞作：世間萬事宛如大夢，人生經歷幾番秋寒"
+  },
+  {
+    "id": "q-284",
+    "text": "採菊東籬下，悠然見南山。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "陶淵明飲酒詩：在東邊竹籬下採擷菊花，悠閒抬頭看見南山"
+  },
+  {
+    "id": "q-285",
+    "text": "山氣日夕佳，飛鳥相與還。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "陶淵明寫景名句：山中傍晚煙霞氣象美好，飛鳥結伴相隨歸巢"
+  },
+  {
+    "id": "q-286",
+    "text": "結廬在人境，而無車馬喧。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "陶淵明名句：將茅廬建造在人群聚集處，卻沒有世俗車馬喧囂"
+  },
+  {
+    "id": "q-287",
+    "text": "問君何能爾？心遠地自偏。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "陶淵明揭示心靈隱逸之道：只要心志遠離喧囂，所居之地自然幽偏"
+  },
+  {
+    "id": "q-288",
+    "text": "青山遮不住，畢竟東流去。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "辛棄疾菩薩蠻詞句：重重青山阻擋不住江水，滾滾江水終究向東奔流"
+  },
+  {
+    "id": "q-289",
+    "text": "眾裡尋他千百度，驀然回首，那人卻在，燈火闌珊處。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "辛棄疾青玉案元夕詞千古絕唱：歷盡尋覓，回頭卻見真摯之人在微光處"
+  },
+  {
+    "id": "q-290",
+    "text": "人生自古誰無死？留取丹心照汗青。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "文天祥過零丁洋正氣詩句：人生終有一死，願留下一腔忠心照耀青史"
+  },
+  {
+    "id": "q-291",
+    "text": "天下興亡，匹夫有責。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "顧炎武日知錄名言：國家的興衰榮辱，普通百姓每個人都有責任"
+  },
+  {
+    "id": "q-292",
+    "text": "沉舟側畔千帆過，病樹前頭萬木春。",
+    "category": "詩詞與古文",
+    "difficulty": "hard",
+    "meaning": "劉禹錫酬樂天揚州初逢：沉船旁邊千帆競發，病樹前方萬木欣欣向榮"
+  },
+  {
+    "id": "q-293",
+    "text": "同是天涯淪落人，相逢何必曾相識！",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "白居易琵琶行感慨身世漂泊之深切共鳴名句"
+  },
+  {
+    "id": "q-294",
+    "text": "別有幽愁暗恨生，此時無聲勝有聲。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "白居易琵琶行描摹音樂暫歇時內心情感波瀾起伏勝於樂音"
+  },
+  {
+    "id": "q-295",
+    "text": "文章千古事，得失寸心知。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "杜甫偶題名句：寫作文章乃千秋傳承大事，其得失唯有作者自知"
+  },
+  {
+    "id": "q-296",
+    "text": "隨風潛入夜，潤物細無聲。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "杜甫春夜喜雨寫春雨柔美滋潤生機之千古名句"
+  },
+  {
+    "id": "q-297",
+    "text": "野火燒不盡，春風吹又生。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "白居易賦得古原草送別：野火無法將野草根莖燒絕，春風拂過又復甦"
+  },
+  {
+    "id": "q-298",
+    "text": "夕陽無限好，只是近黃昏。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "李商隱登樂遊原：夕陽晚霞絢爛美好，只可惜已經逼近黃昏時分"
+  },
+  {
+    "id": "q-299",
+    "text": "春蠶到死絲方盡，蠟炬成灰淚始乾。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "李商隱無題名篇：比喻對事業與愛情的至死不渝奉獻情操"
+  },
+  {
+    "id": "q-300",
+    "text": "相見時難別亦難，東風無力百花殘。",
+    "category": "詩詞與古文",
+    "difficulty": "medium",
+    "meaning": "李商隱抒發離別感傷與無奈相思之情的傳世名篇"
+  }
+]

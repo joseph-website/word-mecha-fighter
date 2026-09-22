@@ -1,0 +1,6 @@
+{
+  "name": "打字機動戰士",
+  "description": "打字機動戰士 - 空中詞句飄浮的中文打字射擊遊戲，支援單人冒險與 2-6 人即時連線對戰，支援電腦與手機原生鍵盤打字、排行榜與題庫。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
