@@ -3,3 +3,29 @@
 :root, html, body, button, input, textarea, select {
   font-family: "Microsoft JhengHei", "微軟正黑體", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
+
+@keyframes verticalSpeedline {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.65;
+  }
+  85% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.speedline-vertical {
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  height: 100%;
+  pointer-events: none;
+  animation: verticalSpeedline 1.4s linear infinite;
+}

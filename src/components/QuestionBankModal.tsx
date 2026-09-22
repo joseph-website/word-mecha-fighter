@@ -31,10 +31,10 @@ import {
 const QUESTION_BANK_TEMPLATE: QuestionItem[] = [
   {
     id: "sample-01",
-    text: "天青色等煙雨，而我在等你。",
+    text: "縱然帶著永遠的傷口，至少我還擁有自由。",
     category: "經典歌詞",
     difficulty: "medium",
-    meaning: "周杰倫《青花瓷》方文山作詞名句"
+    meaning: "伍佰《白鴿》自由與堅毅代表作"
   },
   {
     id: "sample-02",
@@ -570,7 +570,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                             {item.difficulty === 'hard' ? '高級' : item.difficulty === 'medium' ? '中級' : '初級'}
                           </span>
                           {item.meaning && (
-                            <span className="text-stone-400 text-[11px] max-w-[180px] truncate hidden md:inline" title={item.meaning}>
+                            <span className="text-stone-400 text-[11px] shrink-0 hidden md:inline" title={item.meaning}>
                               {item.meaning}
                             </span>
                           )}
@@ -735,7 +735,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                                   : '初級'}
                               </span>
                             </td>
-                            <td className="py-2.5 px-3 text-stone-400 text-[11px] max-w-xs truncate" title={q.meaning}>
+                            <td className="py-2.5 px-3 text-stone-400 text-[11px] whitespace-normal min-w-[120px] max-w-sm" title={q.meaning}>
                               {q.meaning || '—'}
                             </td>
                           </tr>
@@ -833,10 +833,10 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 [
   {
     "id": "custom-1",
-    "text": "天青色等煙雨，而我在等你。",
+    "text": "縱然帶著永遠的傷口，至少我還擁有自由。",
     "category": "經典歌詞",
     "difficulty": "medium",
-    "meaning": "周杰倫《青花瓷》方文山作詞名句"
+    "meaning": "伍佰《白鴿》自由與堅毅代表作"
   }
 ]`}
                 className="w-full h-36 bg-stone-950 border border-stone-800 rounded-2xl p-3.5 text-xs font-mono text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500 resize-y"

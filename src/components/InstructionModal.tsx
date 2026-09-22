@@ -223,26 +223,65 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                   <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-1.5">
                     <span className="text-emerald-400 font-bold text-xs flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      完全正確 · 雷射貫穿擊破
+                      達到 70% 傷害門檻 · 擊破目標通過
                     </span>
                     <p className="text-[11px] text-stone-300 leading-relaxed">
-                      字元 100% 正確無誤時，砲台將發射金色雷射光束直接擊破空中句子，伴隨爆破特效並獲得 Combo 連擊 +1，系統自動推進下一題。
+                      單題打字正確率<strong>達 70% 以上</strong>即判定造成致命破壞並成功擊墜目標，系統推進下一題！若 100% 完全正確，連擊（Combo）+1 並觸發滿額慶祝紙花。
                     </p>
                   </div>
                   <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-800/40 space-y-1.5">
                     <span className="text-rose-400 font-bold text-xs flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4" />
-                      字元失誤 · 紅綠對比提示並重新輸入
+                      未達 70% 門檻 · 紅綠對比並重輸
                     </span>
                     <p className="text-[11px] text-stone-300 leading-relaxed">
-                      若有錯字、漏字或多字，畫面將震動並標註對比（正確字為綠色、錯誤字為紅色）。<strong>輸入框會自動清空</strong>，玩家須從頭重新打一次，且連擊數歸零重計，以深化精準肌肉記憶。
+                      若命中率<strong>低於 70%</strong>，砲火不足以破壞目標，畫面震動並顯示紅綠字元對比（綠色為正確、紅色為錯誤）。輸入框將自動清空，供玩家重新輸入。
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-1 flex items-start gap-2 text-stone-400 text-[11px] bg-stone-900/60 p-2.5 rounded-xl border border-stone-800">
+                  <Target className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span><strong>全局錯字率與淨速度 (Net CPM)</strong>：最終結算的錯字率與準確率，是依據本次挑戰<strong>所有題目的總字數</strong>與<strong>所有打錯字數</strong>嚴格統計；打字速度採 Net CPM（淨打字速度 = 總 CPM × 準確率），真實反映精準度與極速水準。</span>
+                </div>
+
+                <div className="pt-1 flex items-start gap-2 text-stone-400 text-[11px] bg-stone-900/60 p-2.5 rounded-xl border border-stone-800">
                   <Timer className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <span><strong>開局 5 秒倒數熱身</strong>：倒數計時期間（5、4、3、2、1）可先點擊下方輸入框測試輸入法，倒數結束正式開打瞬間系統會自動清空測試內容並重新聚焦，確保公平公正計時。</span>
+                </div>
+              </div>
+
+              {/* 跳過題目懲罰機制 */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/30 via-stone-950/70 to-stone-900/60 border border-amber-500/40 space-y-2.5 text-xs leading-relaxed">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                  <AlertCircle className="w-4 h-4 text-amber-400" />
+                  <span>跳過題目懲罰與注音學習機制 (Skip Penalty)</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+                    凍結 3 秒
+                  </span>
+                </div>
+                <p className="text-stone-300 text-[11px] leading-relaxed">
+                  為維護打字競技公平性並深化生字學習，當玩家點擊「跳過此題」或右上角「跳過」按鈕時，將啟動懲罰與學習流程：
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  <div className="p-3 rounded-xl bg-stone-900/80 border border-amber-500/25 space-y-1">
+                    <span className="text-amber-300 font-bold text-xs flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                      全句標準注音即時展示
+                    </span>
+                    <p className="text-[11px] text-stone-400 leading-relaxed">
+                      空中飛艇將即時標註該題全體漢字的教育部標準注音符號（ㄅㄆㄇㄈ），提供正確讀音指引，輔助玩家掌握生難字聲韻。
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-stone-900/80 border border-amber-500/25 space-y-1">
+                    <span className="text-amber-300 font-bold text-xs flex items-center gap-1.5">
+                      <Timer className="w-3.5 h-3.5 text-amber-400" />
+                      全場凍結停留 3 秒冷卻
+                    </span>
+                    <p className="text-[11px] text-stone-400 leading-relaxed">
+                      系統強制鎖定輸入框與發射按鈕 3 秒鐘。期間比賽總計時器不中斷、連擊（Combo）歸零並計入 1 次失誤，3 秒倒數結束後自動切換下一題。
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -254,7 +293,7 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                     <span>初級挑戰 (Easy)</span>
                   </div>
                   <p className="text-stone-400 text-[11px] leading-relaxed">
-                    短詞句、勵志小品與成語（約 4-12 字），適合暖手與建立穩定節奏。
+                    台灣夜市小吃、短詞句、生活名言與日常成語（約 4-12 字），適合暖手與建立穩定節奏。
                   </p>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-stone-950/60 border border-stone-800 space-y-1.5">
@@ -263,7 +302,7 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                     <span>中級對決 (Medium)</span>
                   </div>
                   <p className="text-stone-400 text-[11px] leading-relaxed">
-                    精選唐詩宋詞與流行歌詞（約 12-20 字），注重文句語韻與連擊手感。
+                    精選台灣現代詩、抒情散文、唐詩宋詞與經典金曲（約 12-20 字），注重文句語韻與連擊手感。
                   </p>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-stone-950/60 border border-stone-800 space-y-1.5">
@@ -272,7 +311,7 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                     <span>高級極速 (Hard)</span>
                   </div>
                   <p className="text-stone-400 text-[11px] leading-relaxed">
-                    長篇文言典故與散文（20 字以上），考驗長段落高抗壓專注與極速手感。
+                    台灣文學長篇名作（白先勇、黃春明、廖鴻基等）與經典典故（20 字以上），考驗長段落專注與極速手感。
                   </p>
                 </div>
               </div>
@@ -366,7 +405,7 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <span className="font-semibold text-stone-200 flex items-center gap-1.5">
                     <FileSpreadsheet className="w-4 h-4 text-amber-400" />
-                    建立專屬文章、成語、歌詞或教材題庫：
+                    內建台灣文學、在地夜市小吃、古典詩詞成語，亦可自由擴充：
                   </span>
                   {onOpenQuestionBank && (
                     <button
@@ -386,11 +425,15 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                 <ul className="space-y-1.5 text-stone-300 text-xs">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span><strong>Excel 批次編輯</strong>：於「編輯題庫」中下載 CSV 範本檔，可在 Excel 或試算表中編輯「題目文字、分類、難度、註解」，再直接上傳檔案或複製貼上表格即刻套用。</span>
+                    <span><strong>內建 350 題嚴選題庫</strong>：收錄台灣文學 48 篇傳世名作（賴和、白先勇、黃春明、余光中等）、台灣夜市小吃、經典成語、唐詩宋詞與台灣獨立樂團/華語金曲，純粹本土語境無非在地梗。</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span><strong>即時管理與檢視</strong>：支援單題新增、修改、刪除、難度過濾與即時文字搜尋。</span>
+                    <span><strong>Excel (CSV) 批次編輯</strong>：於「編輯題庫」中下載 CSV 範本檔，可在 Excel 或試算表中編輯「題目文字、分類、難度、註解」，再直接上傳檔案或複製貼上表格即刻套用。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <span><strong>即時管理與檢視</strong>：支援單題新增、修改、刪除、分類過濾（如獨立篩選「台灣文學」、「夜市與小吃」）與即時文字搜尋。</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />

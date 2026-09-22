@@ -15,23 +15,28 @@ import {
   Target,
   AlertTriangle,
   Clock,
-  LogOut
+  LogOut,
+  CheckCircle2
 } from 'lucide-react';
 import { QuestionItem } from '../types';
 import {
   playLaserShotSound,
   playExplosionSound,
+  playPerfectClearSound,
   playKeyStrokeSound,
   playCorrectSound,
   playErrorSound,
   playQuestionCompleteSound,
-  playCountdownBeep
+  playCountdownBeep,
+  playPenaltySound
 } from '../utils/audio';
+import { getSentenceZhuyin } from '../utils/zhuyin';
 
 interface TypingArenaProps {
   questions: QuestionItem[];
   questionIndex: number;
   onNextQuestion: () => void;
+  onSkipQuestion?: () => void;
   onFinishChallenge: (stats: {
     totalChars: number;
     correctChars: number;
@@ -41,6 +46,8 @@ interface TypingArenaProps {
     wpm: number;
     accuracy: number;
     maxCombo: number;
+    errorRate?: number;
+    netCpm?: number;
   }) => void;
   onQuit: () => void;
   isMultiplayer?: boolean;
@@ -64,6 +71,7 @@ interface LaserBeam {
   startY: number;
   targetX: number;
   targetY: number;
+  isPerfect?: boolean;
 }
 
 interface ExplosionEffect {
@@ -72,6 +80,36 @@ interface ExplosionEffect {
   y: number;
   text: string;
 }
+
+// 戰鬥空域縱向超音速光流線配置 (貫穿高空的戰鬥速度感)
+const SPEED_LINES = [
+  { id: 1, left: '6%', height: '55%', delay: '0s', duration: '1.2s', opacity: 0.18 },
+  { id: 2, left: '14%', height: '75%', delay: '0.4s', duration: '0.9s', opacity: 0.28 },
+  { id: 3, left: '23%', height: '45%', delay: '0.8s', duration: '1.4s', opacity: 0.15 },
+  { id: 4, left: '32%', height: '80%', delay: '0.2s', duration: '1.1s', opacity: 0.22 },
+  { id: 5, left: '42%', height: '60%', delay: '0.6s', duration: '1.3s', opacity: 0.16 },
+  { id: 6, left: '58%', height: '65%', delay: '0.1s', duration: '1.0s', opacity: 0.2 },
+  { id: 7, left: '68%', height: '85%', delay: '0.5s', duration: '0.95s', opacity: 0.26 },
+  { id: 8, left: '77%', height: '50%', delay: '0.9s', duration: '1.5s', opacity: 0.14 },
+  { id: 9, left: '86%', height: '70%', delay: '0.3s', duration: '1.05s', opacity: 0.24 },
+  { id: 10, left: '94%', height: '60%', delay: '0.7s', duration: '1.25s', opacity: 0.18 },
+];
+
+// 戰鬥空域縱深微光粒子配置 (極低透明度 4%~8%，緩慢漂移營造高空大氣層次)
+const AMBIENT_MOTES = [
+  { id: 1, top: '12%', left: '8%', size: 2, delay: 0, duration: 8 },
+  { id: 2, top: '26%', left: '22%', size: 2.5, delay: 1.5, duration: 9 },
+  { id: 3, top: '18%', left: '78%', size: 2, delay: 2, duration: 7 },
+  { id: 4, top: '48%', left: '14%', size: 2, delay: 0.5, duration: 10 },
+  { id: 5, top: '65%', left: '84%', size: 2.5, delay: 2.5, duration: 8.5 },
+  { id: 6, top: '78%', left: '28%', size: 2, delay: 1, duration: 9.5 },
+  { id: 7, top: '35%', left: '92%', size: 2, delay: 3, duration: 11 },
+  { id: 8, top: '82%', left: '72%', size: 2, delay: 1.8, duration: 7.5 },
+  { id: 9, top: '14%', left: '45%', size: 1.5, delay: 2.2, duration: 8 },
+  { id: 10, top: '56%', left: '6%', size: 2, delay: 0.8, duration: 9 },
+  { id: 11, top: '72%', left: '50%', size: 2, delay: 1.2, duration: 10 },
+  { id: 12, top: '22%', left: '62%', size: 1.5, delay: 2.8, duration: 8.2 },
+];
 
 export interface CharEvaluation {
   char: string;
@@ -82,6 +120,8 @@ export interface CharEvaluation {
 export interface SubmissionEvaluation {
   evaluatedChars: CharEvaluation[];
   isAllCorrect: boolean;
+  isPassed: boolean;
+  damagePercent: number;
   submittedText: string;
   hasExcess: boolean;
   excessText: string;
@@ -94,12 +134,18 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   questions,
   questionIndex,
   onNextQuestion,
+  onSkipQuestion,
   onFinishChallenge,
   onQuit,
   isMultiplayer,
   onProgressTick,
   multiplayerHeader,
 }) => {
+  const questionsRef = useRef(questions);
+  useEffect(() => {
+    questionsRef.current = questions;
+  }, [questions]);
+
   const currentQuestion = questions[questionIndex];
   const nextQuestion = questions[questionIndex + 1] || null;
   const targetText = currentQuestion ? currentQuestion.text : '';
@@ -113,8 +159,16 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const [lastEvaluation, setLastEvaluation] = useState<SubmissionEvaluation | null>(null);
   const [vesselShake, setVesselShake] = useState<boolean>(false);
 
+  // 物理打擊反饋 (打字或選字落位時，靶機產生極微幅 1-2px 物理震顫回饋)
+  const [targetJolt, setTargetJolt] = useState<boolean>(false);
+  const triggerTargetJolt = () => {
+    setTargetJolt(true);
+    setTimeout(() => setTargetJolt(false), 90);
+  };
+
   // 累計數據
   const [accumulatedCorrect, setAccumulatedCorrect] = useState<number>(0);
+  const [accumulatedTargetChars, setAccumulatedTargetChars] = useState<number>(0);
   const [accumulatedErrors, setAccumulatedErrors] = useState<number>(0);
   const [currentCombo, setCurrentCombo] = useState<number>(0);
   const [maxCombo, setMaxCombo] = useState<number>(0);
@@ -129,7 +183,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
   // 開局 5 秒倒數計時與提示 (不可跳過，允許玩家於倒數期間預先點選輸入框測試輸入法，倒數結束瞬間全清空)
   useEffect(() => {
-    // 進入時播放第 1 聲倒數短音
+    // 立即自動聚焦輸入框，使玩家在倒數期間即可直接敲打鍵盤測試輸入法與手感
+    inputRef.current?.focus();
+
+    // 進入時立即播放第 1 聲倒數短音，確保與數字 5 呈現無時差同步
     playCountdownBeep(false);
 
     let currentSec = 5;
@@ -158,13 +215,17 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
-  // 動畫與擊破視覺特效
+  // 動畫與擊破視覺特效 (區分 100% 完美全對 vs 70%~99% 一般重創)
   const [laserBeams, setLaserBeams] = useState<LaserBeam[]>([]);
   const [explosions, setExplosions] = useState<ExplosionEffect[]>([]);
   const [isBlasting, setIsBlasting] = useState<boolean>(false);
+  const [blastType, setBlastType] = useState<'perfect' | 'normal' | null>(null);
+  const [blastDamage, setBlastDamage] = useState<number>(100);
   const [cannonRecoil, setCannonRecoil] = useState<boolean>(false);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
 
@@ -174,8 +235,29 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const targetElementRef = useRef<HTMLDivElement>(null);
   const turretElementRef = useRef<HTMLDivElement>(null);
 
+  // 跳過題目懲罰狀態 (停留 3 秒並展示標準注音)
+  const [isPenaltyActive, setIsPenaltyActive] = useState<boolean>(false);
+  const [penaltySecondsLeft, setPenaltySecondsLeft] = useState<number>(3);
+  const penaltyTimerRef = useRef<number | null>(null);
+
+  const clearPenaltyTimer = () => {
+    if (penaltyTimerRef.current) {
+      clearInterval(penaltyTimerRef.current);
+      penaltyTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPenaltyTimer();
+    };
+  }, []);
+
   // 當題目切換時重設狀態
   useEffect(() => {
+    clearPenaltyTimer();
+    setIsPenaltyActive(false);
+    setPenaltySecondsLeft(3);
     setTypedInput('');
     setComposingBuffer('');
     setIsComposing(false);
@@ -186,6 +268,127 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       inputRef.current?.focus();
     }, 60);
   }, [questionIndex]);
+
+  // 判斷當前題目是否為官方預設題庫（以 q- 開頭）
+  const isDefaultQuestion = Boolean(
+    currentQuestion?.id && currentQuestion.id.startsWith('q-')
+  );
+
+  // 當前題目注音拆解：僅官方預設題庫顯示注音，玩家自訂題庫完全不處理注音
+  const zhuyinTokens = useMemo(() => {
+    if (!isDefaultQuestion) return [];
+    return getSentenceZhuyin(targetText, currentQuestion?.bopomofo);
+  }, [isDefaultQuestion, targetText, currentQuestion?.bopomofo]);
+
+  // 觸發跳過題目懲罰：顯示注音（若為預設題庫）並凍結停留 3 秒，並靜默於隊尾補題
+  const handleTriggerSkip = () => {
+    if (isPenaltyActive || countdown !== null || isBlasting) return;
+
+    // 觸發隊尾補題：從未抽取題庫中補充一道同難度（或跨難度）題目到隊尾
+    onSkipQuestion?.();
+
+    const currentTargetLen = targetText.trim().length || 1;
+
+    // 清空輸入
+    setTypedInput('');
+    setComposingBuffer('');
+    setIsComposing(false);
+    setLastEvaluation(null);
+
+    // 中斷連擊、將本題目標字數全數計入全局目標字數與失誤字數
+    setCurrentCombo(0);
+    setAccumulatedTargetChars((prev) => prev + currentTargetLen);
+    setAccumulatedErrors((prev) => prev + currentTargetLen);
+
+    // 播放跳過懲罰警示音
+    playPenaltySound();
+
+    // 啟動 3 秒凍結學習期
+    setIsPenaltyActive(true);
+    setPenaltySecondsLeft(3);
+
+    let remaining = 3;
+    clearPenaltyTimer();
+
+    penaltyTimerRef.current = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) {
+        setPenaltySecondsLeft(remaining);
+      } else {
+        clearPenaltyTimer();
+        setIsPenaltyActive(false);
+
+        const currentTotal = questionsRef.current.length;
+
+        // 若已是最後一題且無可替補之新題，則結算遊戲；否則前往下一題（包含剛補入的題目）
+        if (questionIndex + 1 >= currentTotal) {
+          const finalTimeSec = Math.max((Date.now() - (startTime || Date.now())) / 1000, 1);
+          const totalTarget = accumulatedTargetChars + currentTargetLen;
+          const grossCPM = Math.round(accumulatedCorrect / (finalTimeSec / 60));
+          const finalAcc =
+            totalTarget > 0
+              ? Math.round((accumulatedCorrect / totalTarget) * 1000) / 10
+              : 0;
+          const finalErrorRate = Math.max(0, Math.round((100 - finalAcc) * 10) / 10);
+          const netCPM = Math.round(grossCPM * (finalAcc / 100));
+          const finalWPM = Math.round(netCPM / 2);
+          const totalErrors = accumulatedErrors + currentTargetLen;
+
+          if (isMultiplayer && onProgressTick) {
+            onProgressTick({
+              questionIndex: questionIndex + 1,
+              currentProgress: 100,
+              overallPercent: 100,
+              cpm: netCPM,
+              wpm: finalWPM,
+              accuracy: finalAcc,
+              combo: 0,
+              isFinished: true,
+              finishTime: Math.round(finalTimeSec * 10) / 10,
+            });
+          }
+
+          setTimeout(() => {
+            onFinishChallenge({
+              totalChars: totalTarget,
+              correctChars: accumulatedCorrect,
+              errorChars: totalErrors,
+              timeElapsedSeconds: finalTimeSec,
+              cpm: netCPM,
+              wpm: finalWPM,
+              accuracy: finalAcc,
+              maxCombo: maxCombo,
+              errorRate: finalErrorRate,
+              netCpm: netCPM,
+            });
+          }, 300);
+        } else {
+          if (onProgressTick) {
+            const nextIdx = questionIndex + 1;
+            const nextOverall = (nextIdx / currentTotal) * 100;
+            const totalTarget = accumulatedTargetChars + currentTargetLen;
+            const curGrossCPM = Math.round(accumulatedCorrect / Math.max((Date.now() - (startTime || Date.now())) / 60000, 0.05));
+            const curAcc =
+              totalTarget > 0
+                ? Math.round((accumulatedCorrect / totalTarget) * 1000) / 10
+                : 100;
+            const curNetCPM = Math.round(curGrossCPM * (curAcc / 100));
+            onProgressTick({
+              questionIndex: nextIdx,
+              currentProgress: 0,
+              overallPercent: Math.min(100, nextOverall),
+              cpm: curNetCPM,
+              wpm: Math.round(curNetCPM / 2),
+              accuracy: curAcc,
+              combo: 0,
+              isFinished: false,
+            });
+          }
+          onNextQuestion();
+        }
+      }
+    }, 1000);
+  };
 
   // 計時器運作
   useEffect(() => {
@@ -233,8 +436,8 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     return true;
   }
 
-  // 發射雷射動畫
-  const triggerLaserShot = () => {
+  // 發射雷射動畫 (區分完美雙重碧綠/金光束與一般重創橙紅光束)
+  const triggerLaserShot = (isPerfect: boolean = false) => {
     playLaserShotSound();
     setCannonRecoil(true);
     setTimeout(() => setCannonRecoil(false), 120);
@@ -250,59 +453,91 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
         startY: turretRect.top - skyRect.top,
         targetX: targetRect.left + targetRect.width / 2 - skyRect.left,
         targetY: targetRect.top + targetRect.height / 2 - skyRect.top,
+        isPerfect,
       };
 
       setLaserBeams((prev) => [...prev, beam]);
       setTimeout(() => {
         setLaserBeams((prev) => prev.filter((b) => b.id !== beam.id));
-      }, 350);
+      }, isPerfect ? 450 : 350);
     }
   };
 
-  // 擊破空中句子
-  const handleDestroyTarget = (completedChars: number) => {
+  // 擊破空中句子 (>= 70% 傷害判定通過：強烈區分 100% 全對完美擊破 vs 70%~99% 一般重創)
+  const handleDestroyTarget = (
+    hitCorrectChars: number,
+    questionTargetLen: number,
+    questionErrors: number,
+    damagePercent: number,
+    isAllCorrect: boolean
+  ) => {
     setIsBlasting(true);
-    playExplosionSound();
+    setBlastType(isAllCorrect ? 'perfect' : 'normal');
+    setBlastDamage(damagePercent);
 
-    // 觸發爆炸紙花
-    try {
-      confetti({
-        particleCount: 45,
-        spread: 55,
-        origin: { y: 0.35 },
-        colors: ['#f59e0b', '#10b981', '#f97316', '#38bdf8'],
-      });
-    } catch {
-      // ignore
+    if (isAllCorrect) {
+      // 100% 完美擊破：播放專屬清脆和弦大獎音效，大噴發翡翠綠與金色紙花
+      playPerfectClearSound();
+      try {
+        confetti({
+          particleCount: 85,
+          spread: 80,
+          origin: { y: 0.35 },
+          colors: ['#10b981', '#34d399', '#fbbf24', '#f59e0b', '#ffffff'],
+        });
+      } catch {
+        // ignore
+      }
+    } else {
+      // 70%~99% 一般重創：播放深沉金屬爆炸聲，噴發橙紅火花煙屑
+      playExplosionSound();
+      try {
+        confetti({
+          particleCount: 30,
+          spread: 50,
+          origin: { y: 0.4 },
+          colors: ['#f97316', '#ea580c', '#78716c'],
+        });
+      } catch {
+        // ignore
+      }
     }
 
-    // 增加連擊
-    const newCombo = currentCombo + 1;
+    // 增加連擊：100% 完美擊破連擊 +1；70%~99% 命中過關延續連擊
+    const newCombo = isAllCorrect ? currentCombo + 1 : Math.max(1, currentCombo);
     setCurrentCombo(newCombo);
     if (newCombo > maxCombo) {
       setMaxCombo(newCombo);
     }
 
-    const updatedTotalCorrect = accumulatedCorrect + targetText.length;
+    const updatedTotalCorrect = accumulatedCorrect + hitCorrectChars;
+    const updatedTotalTargetChars = accumulatedTargetChars + questionTargetLen;
+    const updatedTotalErrors = accumulatedErrors + questionErrors;
+
     setAccumulatedCorrect(updatedTotalCorrect);
+    setAccumulatedTargetChars(updatedTotalTargetChars);
+    setAccumulatedErrors(updatedTotalErrors);
+
+    const currentTotal = questionsRef.current.length;
 
     // 檢查是否所有題目皆已擊破
-    if (questionIndex + 1 >= questions.length) {
+    if (questionIndex + 1 >= currentTotal) {
       const finalTimeSec = Math.max((Date.now() - (startTime || Date.now())) / 1000, 1);
-      const finalCPM = Math.round(updatedTotalCorrect / (finalTimeSec / 60));
-      const finalWPM = Math.round(finalCPM / 2);
-      const totalErrors = accumulatedErrors;
+      const grossCPM = Math.round(updatedTotalCorrect / (finalTimeSec / 60));
       const finalAcc =
-        updatedTotalCorrect + totalErrors > 0
-          ? Math.round((updatedTotalCorrect / (updatedTotalCorrect + totalErrors)) * 1000) / 10
+        updatedTotalTargetChars > 0
+          ? Math.round((updatedTotalCorrect / updatedTotalTargetChars) * 1000) / 10
           : 100;
+      const finalErrorRate = Math.max(0, Math.round((100 - finalAcc) * 10) / 10);
+      const netCPM = Math.round(grossCPM * (finalAcc / 100));
+      const finalWPM = Math.round(netCPM / 2);
 
       if (onProgressTick) {
         onProgressTick({
-          questionIndex: questions.length,
+          questionIndex: currentTotal,
           currentProgress: 100,
           overallPercent: 100,
-          cpm: finalCPM,
+          cpm: netCPM,
           wpm: finalWPM,
           accuracy: finalAcc,
           combo: Math.max(newCombo, maxCombo),
@@ -312,41 +547,56 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       }
 
       setTimeout(() => {
+        setIsBlasting(false);
+        setBlastType(null);
         onFinishChallenge({
-          totalChars: updatedTotalCorrect + totalErrors,
+          totalChars: updatedTotalTargetChars,
           correctChars: updatedTotalCorrect,
-          errorChars: totalErrors,
+          errorChars: updatedTotalErrors,
           timeElapsedSeconds: finalTimeSec,
-          cpm: finalCPM,
+          cpm: netCPM,
           wpm: finalWPM,
           accuracy: finalAcc,
           maxCombo: Math.max(newCombo, maxCombo),
+          errorRate: finalErrorRate,
+          netCpm: netCPM,
         });
-      }, 500);
+      }, isAllCorrect ? 750 : 550);
     } else {
       if (onProgressTick) {
         const nextIdx = questionIndex + 1;
-        const nextOverall = (nextIdx / questions.length) * 100;
-        const curCPM = Math.round(updatedTotalCorrect / Math.max((Date.now() - (startTime || Date.now())) / 60000, 0.05));
+        const nextOverall = (nextIdx / currentTotal) * 100;
+        const curGrossCPM = Math.round(updatedTotalCorrect / Math.max((Date.now() - (startTime || Date.now())) / 60000, 0.05));
+        const curAcc =
+          updatedTotalTargetChars > 0
+            ? Math.round((updatedTotalCorrect / updatedTotalTargetChars) * 1000) / 10
+            : 100;
+        const curNetCPM = Math.round(curGrossCPM * (curAcc / 100));
         onProgressTick({
           questionIndex: nextIdx,
           currentProgress: 0,
           overallPercent: Math.min(100, nextOverall),
-          cpm: curCPM,
-          wpm: Math.round(curCPM / 2),
-          accuracy: 100,
+          cpm: curNetCPM,
+          wpm: Math.round(curNetCPM / 2),
+          accuracy: curAcc,
           combo: newCombo,
           isFinished: false,
         });
       }
       setTimeout(() => {
+        setIsBlasting(false);
+        setBlastType(null);
         onNextQuestion();
-      }, 450);
+      }, isAllCorrect ? 650 : 500);
     }
   };
 
   // 檢查目前輸入是否擊破（按 Enter 或點擊「發射擊破」才觸發）
   const checkSubmission = (currentText: string) => {
+    if (isPenaltyActive || countdown !== null) {
+      return;
+    }
+
     if (!startTime && currentText.length > 0) {
       setStartTime(Date.now());
     }
@@ -383,11 +633,17 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     const missingCount = Math.max(0, targetTrimmed.length - trimmed.length);
     const hasExcess = trimmed.length > targetTrimmed.length;
     const excessText = hasExcess ? trimmed.slice(targetTrimmed.length) : '';
+    const excessCount = hasExcess ? excessText.length : 0;
     const isAllCorrect = correctCount === targetTrimmed.length && !hasExcess;
+    const damagePercent = Math.round((correctCount / Math.max(targetTrimmed.length, 1)) * 100);
+    const isPassed = damagePercent >= 70; // 達到 70% 傷害門檻即過關擊墜！
+    const questionErrors = wrongCount + excessCount + missingCount;
 
     const evaluation: SubmissionEvaluation = {
       evaluatedChars: evaluated,
       isAllCorrect,
+      isPassed,
+      damagePercent,
       submittedText: trimmed,
       hasExcess,
       excessText,
@@ -398,20 +654,20 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
     setLastEvaluation(evaluation);
 
-    if (isAllCorrect) {
-      // 完全正確擊破！發射雷射與爆炸
-      triggerLaserShot();
-      handleDestroyTarget(targetTrimmed.length);
+    if (isPassed) {
+      // 達成 70% 傷害門檻：擊沉敵機並推進下一題
+      triggerLaserShot(isAllCorrect);
+      handleDestroyTarget(correctCount, targetTrimmed.length, questionErrors, damagePercent, isAllCorrect);
       setTypedInput('');
     } else {
-      // 若有錯誤，計入失誤並播放錯誤音效與震動
+      // 傷害不足 70% 門檻：傷害不足，播放警告與受挫晃動
       playErrorSound();
-      const penalty = Math.max(1, wrongCount + (hasExcess ? 1 : 0) + (missingCount > 0 ? 1 : 0));
+      const penalty = Math.max(1, questionErrors);
       setAccumulatedErrors((prev) => prev + penalty);
       setCurrentCombo(0);
       setVesselShake(true);
       setTimeout(() => setVesselShake(false), 500);
-      // 玩家送出後若有錯字，清空輸入視窗，玩家必須從頭開始輸入
+      // 玩家送出後若傷害不足 70%，清空輸入視窗，玩家重新輸入
       setTypedInput('');
     }
   };
@@ -426,9 +682,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       setStartTime(Date.now());
     }
 
-    // 播放鍵盤敲擊音效
+    // 播放鍵盤敲擊音效與機體微受擊微晃震顫
     if (!isComposing) {
       playKeyStrokeSound();
+      triggerTargetJolt();
     }
   };
 
@@ -446,6 +703,8 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     setComposingBuffer('');
     const currentVal = e.currentTarget.value;
     setTypedInput(currentVal);
+    playKeyStrokeSound();
+    triggerTargetJolt();
     // 不自動送出，依需求必須按 Enter 或「發射擊破」才送出
   };
 
@@ -453,10 +712,11 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !isComposing) {
       e.preventDefault();
-      // 倒數期間不執行發射擊破
-      if (countdown !== null) return;
+      // 倒數期間或跳過懲罰期間不執行發射擊破
+      if (countdown !== null || isPenaltyActive) return;
       checkSubmission(typedInput);
     } else if (e.key === 'Escape') {
+      if (isPenaltyActive) return;
       // 清空目前輸入與評估標註
       setTypedInput('');
       setLastEvaluation(null);
@@ -464,14 +724,17 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   };
 
   // 即時打字指標計算
-  const totalCorrect = accumulatedCorrect + (lastEvaluation?.isAllCorrect ? 0 : evaluatedCharsCount);
+  const totalCorrect = accumulatedCorrect + (lastEvaluation?.isPassed ? 0 : evaluatedCharsCount);
+  const totalTargetChars = accumulatedTargetChars + (lastEvaluation?.isPassed ? 0 : (targetText.trim().length || 0));
   const totalErrors = accumulatedErrors;
   const effectiveTimeMin = Math.max(elapsedSeconds / 60, 0.05);
-  const currentCPM = Math.round(totalCorrect / effectiveTimeMin);
+  const grossCPM = Math.round(totalCorrect / effectiveTimeMin);
   const currentAccuracy =
-    totalCorrect + totalErrors > 0
-      ? Math.round((totalCorrect / (totalCorrect + totalErrors)) * 1000) / 10
+    totalTargetChars > 0
+      ? Math.round((totalCorrect / totalTargetChars) * 1000) / 10
       : 100;
+  const currentErrorRate = Math.max(0, Math.round((100 - currentAccuracy) * 10) / 10);
+  const currentCPM = Math.round(grossCPM * (currentAccuracy / 100)); // Net CPM 淨速度
 
   const progressPercent = Math.round(((questionIndex) / questions.length) * 100);
 
@@ -503,18 +766,18 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   return (
     <div
       id="typing-shooter-arena"
-      className="w-full max-w-5xl mx-auto px-1.5 sm:px-4 py-1 sm:py-3 flex flex-col gap-2 sm:gap-3.5 select-none"
+      className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-2 sm:px-4 py-1 sm:py-2 flex flex-col gap-1.5 sm:gap-2.5 select-none justify-center transition-all"
       onClick={() => inputRef.current?.focus()}
     >
       {/* 多人連線賽況頂部導覽列 */}
       {multiplayerHeader}
 
       {/* Top Combat HUD (戰況儀表板) */}
-      <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-xl space-y-1.5 sm:space-y-2">
+      <div className="bg-stone-900/90 border border-stone-800 rounded-xl p-2 sm:p-2.5 shadow-lg space-y-1 sm:space-y-1.5">
         <div className="flex items-center justify-between text-xs text-stone-400">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="inline-flex items-center gap-1 sm:gap-1.5 font-bold text-amber-400 text-xs sm:text-sm">
-              <Crosshair className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 animate-spin-slow shrink-0" />
+              <Crosshair className="w-3.5 h-3.5 text-amber-500 animate-spin-slow shrink-0" />
               <span>進度 {questionIndex + 1} / {questions.length} 題</span>
             </span>
             <span className="hidden sm:inline px-2 py-0.5 rounded text-[10px] bg-stone-800 text-stone-300 font-mono">
@@ -537,17 +800,17 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                 e.stopPropagation();
                 setShowQuitModal(true);
               }}
-              className="px-2.5 py-1 rounded-lg bg-rose-950/40 border border-rose-800/50 text-rose-300 hover:bg-rose-900/60 hover:text-rose-100 transition-colors text-xs font-medium flex items-center gap-1 cursor-pointer"
+              className="px-2 py-0.5 rounded-lg bg-rose-950/40 border border-rose-800/50 text-rose-300 hover:bg-rose-900/60 hover:text-rose-100 transition-colors text-xs font-medium flex items-center gap-1 cursor-pointer"
               title="離開本次挑戰"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3 h-3" />
               <span>離開</span>
             </button>
           </div>
         </div>
 
         {/* Fluid Progress Bar */}
-        <div className="w-full h-1 sm:h-1.5 bg-stone-950 rounded-full overflow-hidden border border-stone-800">
+        <div className="w-full h-1 bg-stone-950 rounded-full overflow-hidden border border-stone-800">
           <motion.div
             className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full"
             animate={{ width: `${progressPercent}%` }}
@@ -555,99 +818,150 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           />
         </div>
 
-        {/* Combat Metrics Row - 手機版濃縮為單一橫排 (4 欄)，避免佔據過多高度 */}
-        <div className="grid grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 pt-0.5 sm:pt-1">
+        {/* Combat Metrics Row - 濃縮單排高密度指標 */}
+        <div className="grid grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 pt-0.5">
           {/* 1. 計時欄位 */}
-          <div id="stat-timer" className="bg-stone-950/70 border border-stone-800/80 rounded-lg sm:rounded-xl py-1 sm:py-1.5 px-1 sm:px-3 text-center">
-            <span className="text-[9px] sm:text-[10px] text-stone-400 block flex items-center justify-center gap-0.5 sm:gap-1">
-              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-sky-400" />
+          <div id="stat-timer" className="bg-stone-950/70 border border-stone-800/80 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 text-center">
+            <span className="text-[9px] text-stone-400 block flex items-center justify-center gap-0.5">
+              <Clock className="w-2.5 h-2.5 text-sky-400" />
               計時
             </span>
             <div className="flex items-baseline justify-center">
-              <span className="text-xs sm:text-base font-bold font-mono text-sky-400">
+              <span className="text-xs sm:text-sm md:text-base font-bold font-mono text-sky-400">
                 {formatTimer(elapsedSeconds)}
               </span>
             </div>
           </div>
 
           {/* 2. 打字速度 */}
-          <div id="stat-cpm" className="bg-stone-950/70 border border-stone-800/80 rounded-lg sm:rounded-xl py-1 sm:py-1.5 px-1 sm:px-3 text-center">
-            <span className="text-[9px] sm:text-[10px] text-stone-400 block truncate">速度(CPM)</span>
+          <div id="stat-cpm" className="bg-stone-950/70 border border-stone-800/80 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 text-center">
+            <span className="text-[9px] text-stone-400 block truncate">速度(CPM)</span>
             <div className="flex items-baseline justify-center gap-0.5">
-              <span className="text-xs sm:text-base font-bold font-mono text-amber-400">{currentCPM}</span>
-              <span className="text-[8px] sm:text-[9px] text-stone-500 hidden sm:inline">字/分</span>
+              <span className="text-xs sm:text-sm md:text-base font-bold font-mono text-amber-400">{currentCPM}</span>
+              <span className="text-[8px] text-stone-500 hidden sm:inline">字/分</span>
             </div>
           </div>
 
-          {/* 3. 命中準確率 */}
-          <div id="stat-accuracy" className="bg-stone-950/70 border border-stone-800/80 rounded-lg sm:rounded-xl py-1 sm:py-1.5 px-1 sm:px-3 text-center">
-            <span className="text-[9px] sm:text-[10px] text-stone-400 block">準確率</span>
-            <div className="flex items-baseline justify-center">
-              <span
-                className={`text-xs sm:text-base font-bold font-mono ${
-                  currentAccuracy >= 95 ? 'text-emerald-400' : 'text-amber-400'
-                }`}
-              >
-                {currentAccuracy}%
+          {/* 3. 已擊破目標數 (取代干擾性準確率，避免遊戲中給予挫折壓力) */}
+          <div id="stat-targets-cleared" className="bg-stone-950/70 border border-stone-800/80 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 text-center">
+            <span className="text-[9px] text-stone-400 block flex items-center justify-center gap-0.5 truncate">
+              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+              已擊破
+            </span>
+            <div className="flex items-baseline justify-center gap-0.5">
+              <span className="text-xs sm:text-sm md:text-base font-bold font-mono text-emerald-400">
+                {questionIndex}
+              </span>
+              <span className="text-[8px] text-stone-500">
+                /{questions.length}
               </span>
             </div>
           </div>
 
           {/* 4. 連擊 COMBO */}
-          <div id="stat-combo" className="bg-stone-950/70 border border-stone-800/80 rounded-lg sm:rounded-xl py-1 sm:py-1.5 px-1 sm:px-3 text-center">
-            <span className="text-[9px] sm:text-[10px] text-stone-400 block flex items-center justify-center gap-0.5 sm:gap-1">
-              <Flame className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${currentCombo > 0 ? 'text-orange-500 animate-bounce' : 'text-stone-500'}`} />
+          <div id="stat-combo" className="bg-stone-950/70 border border-stone-800/80 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 text-center">
+            <span className="text-[9px] text-stone-400 block flex items-center justify-center gap-0.5">
+              <Flame className={`w-2.5 h-2.5 ${currentCombo > 0 ? 'text-orange-500 animate-bounce' : 'text-stone-500'}`} />
               連擊
             </span>
             <div className="flex items-baseline justify-center gap-0.5">
-              <span className={`text-xs sm:text-base font-bold font-mono ${currentCombo >= 5 ? 'text-orange-400' : 'text-stone-200'}`}>
+              <span className={`text-xs sm:text-sm md:text-base font-bold font-mono ${currentCombo >= 5 ? 'text-orange-400' : 'text-stone-200'}`}>
                 {currentCombo}
               </span>
-              <span className="text-[8px] sm:text-[9px] text-stone-500 hidden sm:inline">次</span>
+              <span className="text-[8px] text-stone-500 hidden sm:inline">次</span>
             </div>
           </div>
 
           {/* 5. 桌面版額外顯示未擊破目標與跳過 */}
-          <div id="stat-remaining" className="hidden lg:flex bg-stone-950/70 border border-stone-800/80 rounded-xl py-1.5 px-3 items-center justify-between">
+          <div id="stat-remaining" className="hidden lg:flex bg-stone-950/70 border border-stone-800/80 rounded-lg py-0.5 sm:py-1 px-2 items-center justify-between">
             <div>
-              <span className="text-[10px] text-stone-400 block">未擊破目標</span>
-              <span className="text-sm font-bold font-mono text-stone-200">{questions.length - questionIndex} 艘</span>
+              <span className="text-[9px] text-stone-400 block">未擊破目標</span>
+              <span className="text-xs sm:text-sm font-bold font-mono text-stone-200">{questions.length - questionIndex} 艘</span>
             </div>
             <button
               id="btn-skip-target-hud"
+              disabled={isPenaltyActive || countdown !== null}
               onClick={(e) => {
                 e.stopPropagation();
-                onNextQuestion();
+                handleTriggerSkip();
               }}
-              className="text-[11px] text-stone-400 hover:text-amber-400 flex items-center gap-1 px-2 py-1 rounded bg-stone-900 border border-stone-800 hover:border-amber-500/50 transition-colors cursor-pointer"
-              title="跳過當前目標"
+              className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded border transition-colors cursor-pointer ${
+                isPenaltyActive || countdown !== null
+                  ? 'text-stone-600 bg-stone-950 border-stone-900 cursor-not-allowed'
+                  : 'text-stone-400 hover:text-amber-400 bg-stone-900 border-stone-800 hover:border-amber-500/50'
+              }`}
+              title={isPenaltyActive ? '跳過懲罰中 (凍結 3 秒)' : '跳過當前目標 (懲罰：停留 3 秒並展示注音)'}
             >
-              <SkipForward className="w-3.5 h-3.5" />
-              <span>跳過</span>
+              <SkipForward className="w-3 h-3" />
+              <span>{isPenaltyActive ? `懲罰 ${penaltySecondsLeft}s` : '跳過'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Air Space / Sky Defense Battlefield */}
+      {/* Main Air Space / Sky Defense Battlefield - 自適應響應高度與縱深 */}
       <div
         id="sky-defense-battlefield"
         ref={skyContainerRef}
-        className="relative w-full h-[200px] xs:h-[225px] sm:h-[310px] md:h-[350px] bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 border-2 border-stone-800 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between p-2.5 sm:p-4"
+        className="relative w-full h-[220px] xs:h-[260px] sm:h-[300px] md:h-[350px] lg:h-[400px] xl:h-[440px] max-h-[58vh] bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 border-2 border-stone-800 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-2 sm:p-4"
         style={{
-          backgroundImage: `radial-gradient(circle at 50% 20%, rgba(245, 158, 11, 0.07) 0%, transparent 60%), radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle at 50% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 60%), radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px)`,
           backgroundSize: '100% 100%, 24px 24px',
         }}
       >
+        {/* 背景縱向超音速速度線 (高速穿梭高空的戰鬥臨場感) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {SPEED_LINES.map((line) => (
+            <div
+              key={line.id}
+              className="speedline-vertical"
+              style={{
+                left: line.left,
+                height: line.height,
+                animationDelay: line.delay,
+                animationDuration: line.duration,
+                background: `linear-gradient(to bottom, transparent, rgba(251, 191, 36, ${line.opacity}), transparent)`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 背景大氣縱深粒子 (極輕量緩慢微光，營造高空大氣縱深層次) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {AMBIENT_MOTES.map((mote) => (
+            <motion.div
+              key={mote.id}
+              className="absolute rounded-full bg-amber-300/40"
+              style={{
+                top: mote.top,
+                left: mote.left,
+                width: `${mote.size}px`,
+                height: `${mote.size}px`,
+                boxShadow: '0 0 6px rgba(251,191,36,0.3)',
+              }}
+              animate={{
+                y: [0, -14, 0],
+                opacity: [0.04, 0.12, 0.04],
+              }}
+              transition={{
+                duration: mote.duration,
+                delay: mote.delay,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+
         {/* 開局 5 秒畫面正中央倒數及開始提示 */}
         <AnimatePresence>
           {countdown !== null && (
             <motion.div
               id="game-start-countdown-overlay"
-              initial={{ opacity: 0 }}
+              initial={{ opacity: 1 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.15 }}
               className="absolute inset-0 z-40 bg-stone-950/85 backdrop-blur-md flex flex-col items-center justify-center select-none"
             >
               <div className="relative flex items-center justify-center">
@@ -664,10 +978,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     {countdown === 'start' ? (
                       <motion.div
                         key="start"
-                        initial={{ scale: 0.4, opacity: 0 }}
-                        animate={{ scale: [0.6, 1.25, 1], opacity: 1 }}
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: [0.8, 1.2, 1], opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.35 }}
+                        transition={{ duration: 0.25 }}
                         className="flex flex-col items-center"
                       >
                         <span className="text-2xl sm:text-3xl font-black tracking-wider text-emerald-400 drop-shadow-[0_0_16px_rgba(52,211,153,0.9)]">
@@ -680,10 +994,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     ) : (
                       <motion.div
                         key={countdown}
-                        initial={{ scale: 1.8, opacity: 0 }}
+                        initial={countdown === 5 ? { scale: 1, opacity: 1 } : { scale: 1.3, opacity: 0.9 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.6, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                        exit={{ scale: 0.85, opacity: 0 }}
+                        transition={{ duration: 0.12, ease: 'easeOut' }}
                         className="flex flex-col items-center"
                       >
                         <span className="text-5xl sm:text-6xl font-black font-mono text-amber-400 drop-shadow-[0_0_25px_rgba(245,158,11,0.85)]">
@@ -723,41 +1037,63 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Air Space Grid Altitude Marks */}
-        <div className="absolute inset-0 pointer-events-none opacity-20 flex flex-col justify-between p-3 text-[10px] font-mono text-stone-500">
-          <div className="flex justify-between border-b border-stone-800 pb-1">
-            <span>[ 空域高度: 1200M - 高空飄浮區 ]</span>
-            <span>RADAR ACTIVE</span>
-          </div>
-          <div className="border-b border-dashed border-stone-800/40 w-full" />
-          <div className="flex justify-between border-t border-stone-800 pt-1">
-            <span>[ 地表防禦線 - 砲台發射基座 ]</span>
-            <span>READY TO FIRE</span>
-          </div>
-        </div>
-
-        {/* Dynamic Laser Beams SVG Layer */}
+        {/* Dynamic Laser Beams SVG Layer (區分完美綠金雙光束與一般橙紅重創光束) */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-20">
           {laserBeams.map((beam) => (
-            <line
-              key={beam.id}
-              x1={beam.startX}
-              y1={beam.startY}
-              x2={beam.targetX}
-              y2={beam.targetY}
-              stroke="#f59e0b"
-              strokeWidth="4"
-              strokeLinecap="round"
-              className="animate-pulse"
-              style={{
-                filter: 'drop-shadow(0 0 8px #f59e0b) drop-shadow(0 0 16px #fbbf24)',
-              }}
-            />
+            <React.Fragment key={beam.id}>
+              {beam.isPerfect ? (
+                <>
+                  {/* 完美全對：外層碧綠離子護層 */}
+                  <line
+                    x1={beam.startX}
+                    y1={beam.startY}
+                    x2={beam.targetX}
+                    y2={beam.targetY}
+                    stroke="#10b981"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    style={{
+                      filter: 'drop-shadow(0 0 12px #10b981) drop-shadow(0 0 24px #34d399)',
+                      opacity: 0.9,
+                    }}
+                  />
+                  {/* 完美全對：內芯極致金光 */}
+                  <line
+                    x1={beam.startX}
+                    y1={beam.startY}
+                    x2={beam.targetX}
+                    y2={beam.targetY}
+                    stroke="#fbbf24"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    className="animate-pulse"
+                    style={{
+                      filter: 'drop-shadow(0 0 8px #ffffff)',
+                    }}
+                  />
+                </>
+              ) : (
+                /* 一般重創：熾烈橙紅雷射光束 */
+                <line
+                  x1={beam.startX}
+                  y1={beam.startY}
+                  x2={beam.targetX}
+                  y2={beam.targetY}
+                  stroke="#f97316"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  className="animate-pulse"
+                  style={{
+                    filter: 'drop-shadow(0 0 8px #f97316) drop-shadow(0 0 16px #ea580c)',
+                  }}
+                />
+              )}
+            </React.Fragment>
           ))}
         </svg>
 
         {/* Floating Sentence Target in Air */}
-        <div className="relative z-10 w-full flex flex-col items-center pt-2 sm:pt-4">
+        <div className="relative z-10 w-full flex flex-col items-center pt-1 sm:pt-2 min-h-[160px] sm:min-h-[175px] justify-center">
           <AnimatePresence mode="wait">
             {!isBlasting && currentQuestion && (
               <motion.div
@@ -765,123 +1101,208 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                 ref={targetElementRef}
                 initial={{ y: -50, opacity: 0, scale: 0.8 }}
                 animate={{
-                  y: [0, -6, 0],
+                  y: [0, -5, 0],
                   opacity: 1,
-                  scale: 1,
+                  scale: targetJolt ? 0.99 : 1,
+                  x: targetJolt ? 1 : 0,
                 }}
                 exit={{
-                  scale: [1, 1.25, 0],
+                  scale: [1, 1.2, 0],
                   opacity: [1, 1, 0],
                   filter: ['blur(0px)', 'blur(4px)', 'blur(10px)'],
                 }}
                 transition={{
                   y: { repeat: Infinity, duration: 3.5, ease: 'easeInOut' },
-                  scale: { duration: 0.3 },
-                  opacity: { duration: 0.3 },
+                  scale: { duration: 0.08 },
+                  opacity: { duration: 0.25 },
                 }}
-                className="max-w-xl mx-auto flex flex-col items-center group cursor-pointer"
+                className="w-full max-w-xl sm:max-w-2xl xl:max-w-3xl mx-auto flex flex-col items-center group cursor-pointer"
                 onClick={() => inputRef.current?.focus()}
               >
                 {/* Target Information Ribbon */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 shadow-sm">
-                    <Target className="w-3 h-3 text-amber-400 animate-pulse" />
-                    <span>空中目標 #{questionIndex + 1}</span>
-                  </span>
-                  <span className="text-xs text-stone-400 font-sans truncate max-w-[280px]">
-                    {currentQuestion.meaning}
-                  </span>
+                <div className="flex items-center justify-between w-full max-w-lg sm:max-w-xl xl:max-w-2xl mb-1 px-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 shadow-sm shrink-0">
+                      <Target className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
+                      <span>TARGET #{questionIndex + 1}</span>
+                    </span>
+                    {currentQuestion.meaning && (
+                      <span className="text-[11px] sm:text-xs text-amber-200/90 font-sans tracking-wide">
+                        {currentQuestion.meaning}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* The Floating Sentence Vessel (飄浮詞句飛艇) */}
                 <div
-                  className={`relative px-4 py-2.5 sm:px-8 sm:py-5 rounded-xl sm:rounded-2xl bg-stone-900/90 border-2 ${
-                    lastEvaluation?.isAllCorrect
-                      ? 'border-emerald-500/80 shadow-[0_0_30px_rgba(16,185,129,0.35)]'
+                  className={`relative px-4 py-2.5 sm:px-8 sm:py-3.5 rounded-xl sm:rounded-2xl bg-stone-900/90 border-2 ${
+                    isPenaltyActive
+                      ? 'border-amber-400 bg-stone-900/95 shadow-[0_0_35px_rgba(251,191,36,0.45)] ring-2 ring-amber-400/40'
+                      : lastEvaluation?.isAllCorrect
+                      ? 'border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]'
                       : lastEvaluation && !lastEvaluation.isAllCorrect
-                      ? 'border-rose-500/80 shadow-[0_0_30px_rgba(244,63,94,0.35)]'
-                      : 'border-amber-500/60 shadow-[0_0_25px_rgba(245,158,11,0.25)]'
+                      ? 'border-rose-500/80 shadow-[0_0_25px_rgba(244,63,94,0.35)]'
+                      : 'border-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
                   } backdrop-blur-md flex flex-col items-center justify-center transition-all duration-200 ${
                     vesselShake ? 'animate-bounce' : ''
                   }`}
                 >
-                  {/* Lock-on Reticle Corners */}
-                  <div className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 border-t-2 border-l-2 border-amber-400" />
-                  <div className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 border-t-2 border-r-2 border-amber-400" />
-                  <div className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 border-b-2 border-l-2 border-amber-400" />
-                  <div className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 border-b-2 border-r-2 border-amber-400" />
+                  {/* Chamfered Tactical Reticle Corners */}
+                  <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-amber-400" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-amber-400" />
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-amber-400" />
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-amber-400" />
 
-                  {/* Sentence Characters: 輸入中不顯示綠色對應，送出後才對正確字顯綠、錯誤字顯紅 */}
-                  <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold tracking-wider leading-relaxed flex flex-wrap justify-center items-center gap-1 sm:gap-1.5">
-                    {targetText.split('').map((char, index) => {
-                      const evalItem = lastEvaluation?.evaluatedChars[index];
-                      const isEvaluated = Boolean(lastEvaluation);
-                      const isCorrect = evalItem?.status === 'correct';
-                      const isWrong = evalItem?.status === 'wrong';
-
-                      let charStyle = 'text-stone-100';
-                      if (isEvaluated) {
-                        if (isCorrect) {
-                          charStyle = 'text-emerald-400 font-extrabold drop-shadow-[0_0_12px_rgba(52,211,153,0.9)] bg-emerald-950/40 border-b-2 border-emerald-400 rounded-t px-1';
-                        } else if (isWrong) {
-                          charStyle = 'text-rose-400 font-extrabold drop-shadow-[0_0_12px_rgba(244,63,94,0.9)] bg-rose-950/70 border-b-2 border-rose-500 rounded-t px-1 animate-pulse';
-                        } else {
-                          charStyle = 'text-stone-500 font-normal px-0.5';
-                        }
-                      }
-
-                      return (
-                        <span
-                          key={index}
-                          className={`relative inline-block transition-all duration-150 ${charStyle}`}
-                        >
-                          {char}
+                  {/* 跳過懲罰狀態標頭提示 */}
+                  {isPenaltyActive && (
+                    <div className="w-full flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-amber-500/30">
+                      <span className="text-[11px] sm:text-xs font-bold text-amber-400 flex items-center gap-1.5 animate-pulse">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>
+                          {isDefaultQuestion
+                            ? '觸發跳過懲罰！學習此題注音 · 凍結停留 3 秒'
+                            : '觸發跳過懲罰！題目跳過凍結停留 3 秒'}
                         </span>
-                      );
-                    })}
-
-                    {/* 若輸入字數超出題目，在末端以紅色標註多餘字元 */}
-                    {lastEvaluation?.hasExcess && (
-                      <span
-                        className="inline-flex items-center text-xs sm:text-sm font-mono text-rose-300 bg-rose-950/80 border border-rose-500/60 rounded px-1.5 py-0.5 line-through decoration-rose-500 ml-1"
-                        title="多出的字元"
-                      >
-                        +{lastEvaluation.excessText}
                       </span>
-                    )}
-                  </div>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold text-xs border border-amber-500/40 shrink-0">
+                        {penaltySecondsLeft}s
+                      </span>
+                    </div>
+                  )}
 
-                  {/* 送出後若有錯誤，顯示檢驗結果提示 */}
-                  {lastEvaluation && !lastEvaluation.isAllCorrect && (
+                  {/* Sentence Characters: 僅在跳過懲罰時 (isPenaltyActive) 顯示注音輔助；一般闖關不顯示注音，只呈現清晰文字與輸入後的字元對錯反饋 */}
+                  {isPenaltyActive ? (
+                    <div className="flex flex-wrap justify-center items-end gap-x-1.5 sm:gap-x-2.5 gap-y-1.5 py-0.5">
+                      {isDefaultQuestion ? (
+                        zhuyinTokens.map((item, idx) => (
+                          <div key={idx} className="flex flex-col items-center justify-end">
+                            {item.zhuyin ? (
+                              <span className="text-[11px] sm:text-xs font-mono font-bold text-amber-300 tracking-tight leading-none mb-0.5 animate-pulse drop-shadow-[0_0_6px_rgba(245,158,11,0.8)]">
+                                {item.zhuyin}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] sm:text-xs leading-none mb-0.5 invisible select-none">
+                                &nbsp;
+                              </span>
+                            )}
+                            <span className="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-amber-100 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]">
+                              {item.char}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-amber-100 tracking-wider leading-snug drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]">
+                          {targetText}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* 一般闖關：純文字高清晰呈現，不顯示注音；送出後以光效反饋各字元對錯 */
+                    <div className="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-wider leading-snug flex flex-wrap justify-center items-center gap-1 sm:gap-1.5 py-1">
+                      {targetText.split('').map((char, index) => {
+                        const evalItem = lastEvaluation?.evaluatedChars[index];
+                        const isEvaluated = Boolean(lastEvaluation);
+                        const isCorrect = evalItem?.status === 'correct';
+                        const isWrong = evalItem?.status === 'wrong';
+
+                        let charStyle = 'text-stone-100';
+                        if (isEvaluated) {
+                          if (isCorrect) {
+                            charStyle = 'text-emerald-400 font-extrabold drop-shadow-[0_0_10px_rgba(52,211,153,0.9)] bg-emerald-950/40 border-b-2 border-emerald-400 rounded-t px-0.5';
+                          } else if (isWrong) {
+                            charStyle = 'text-rose-400 font-extrabold drop-shadow-[0_0_10px_rgba(244,63,94,0.9)] bg-rose-950/70 border-b-2 border-rose-500 rounded-t px-0.5 animate-pulse';
+                          } else {
+                            charStyle = 'text-stone-500 font-normal px-0.5';
+                          }
+                        }
+
+                        return (
+                          <span
+                            key={index}
+                            className={`relative inline-block transition-all duration-150 ${charStyle}`}
+                          >
+                            {char}
+                          </span>
+                        );
+                      })}
+
+                      {/* 若輸入字數超出題目，在末端以紅色標註多餘字元 */}
+                      {lastEvaluation?.hasExcess && (
+                        <span
+                          className="inline-flex items-center text-xs font-mono text-rose-300 bg-rose-950/80 border border-rose-500/60 rounded px-1.5 py-0.5 line-through decoration-rose-500 ml-1.5"
+                          title="多出的字元"
+                        >
+                          +{lastEvaluation.excessText}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 跳過懲罰時的倒數進度條 */}
+                  {isPenaltyActive && (
+                    <div className="w-full mt-2 space-y-1">
+                      <div className="w-full bg-stone-950/80 rounded-full h-1.5 overflow-hidden border border-amber-500/30">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-1000 ease-linear rounded-full"
+                          style={{ width: `${(penaltySecondsLeft / 3) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] sm:text-[11px] text-center text-amber-300/90 font-medium">
+                        請趁此 3 秒掌握生字注音讀音，冷卻結束後自動推進下一題
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 送出後結果提示 (70% 通過判定) */}
+                  {lastEvaluation && (
                     <motion.div
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-2.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-950/80 border border-rose-500/50 text-rose-300 text-xs shadow-sm"
+                      className={`mt-1.5 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] shadow-sm font-medium ${
+                        lastEvaluation.isPassed
+                          ? lastEvaluation.isAllCorrect
+                            ? 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-300'
+                            : 'bg-amber-950/80 border border-amber-500/50 text-amber-300'
+                          : 'bg-rose-950/80 border border-rose-500/50 text-rose-300'
+                      }`}
                     >
-                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                      <span>
-                        {lastEvaluation.wrongCount > 0 && `${lastEvaluation.wrongCount} 字錯誤 `}
-                        {lastEvaluation.missingCount > 0 && `${lastEvaluation.missingCount} 字未填 `}
-                        {lastEvaluation.hasExcess && '字數超出 '}
-                        — 請修正後按 Enter 或「發射擊破」
-                      </span>
+                      {lastEvaluation.isPassed ? (
+                        <span>
+                          {lastEvaluation.isAllCorrect
+                            ? '🎯 100% 完美命中！直接擊墜目標！'
+                            : `💥 命中率 ${lastEvaluation.damagePercent}%（已達 70% 門檻）破壞成功！`}
+                        </span>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                          <span>未造成有效傷害</span>
+                        </>
+                      )}
                     </motion.div>
                   )}
 
-                  {/* Sub-Health Bar / Match Ratio (送出後反應正確率) */}
-                  <div className="absolute -bottom-2 left-4 right-4 h-1 bg-stone-950 rounded-full overflow-hidden border border-stone-700">
+                  {/* 敵機耐久度損害條 (附 70% 臨界過載標記) */}
+                  <div className="absolute -bottom-2 left-4 right-4 h-1.5 bg-stone-950 rounded-full overflow-hidden border border-stone-700/80 relative">
+                    {/* 70% 門檻刻度線 */}
+                    <div
+                      className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-amber-400/90 z-10 shadow-[0_0_4px_rgba(251,191,36,0.9)]"
+                      title="70% 擊墜門檻"
+                    />
                     <div
                       className={`h-full transition-all duration-300 ${
-                        lastEvaluation?.isAllCorrect
-                          ? 'bg-emerald-400'
-                          : lastEvaluation && !lastEvaluation.isAllCorrect
+                        lastEvaluation?.isPassed
+                          ? lastEvaluation.isAllCorrect
+                            ? 'bg-emerald-400'
+                            : 'bg-amber-400'
+                          : lastEvaluation && !lastEvaluation.isPassed
                           ? 'bg-rose-500'
                           : 'bg-stone-700'
                       }`}
                       style={{
                         width: `${
                           lastEvaluation
-                            ? (lastEvaluation.correctCount / (targetText.length || 1)) * 100
+                            ? Math.min(100, lastEvaluation.damagePercent)
                             : 0
                         }%`,
                       }}
@@ -892,98 +1313,206 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
             )}
           </AnimatePresence>
 
-          {/* Explosion / Shatter Visual Flash */}
-          {isBlasting && (
-            <motion.div
-              initial={{ scale: 0.5, opacity: 1 }}
-              animate={{ scale: 1.8, opacity: 0 }}
-              transition={{ duration: 0.45 }}
-              className="py-12 flex flex-col items-center justify-center text-amber-400 font-bold text-2xl sm:text-3xl"
-            >
-              <div className="flex items-center gap-2 drop-shadow-[0_0_15px_#f59e0b]">
-                <Sparkles className="w-8 h-8 text-amber-300" />
-                <span>擊破成功！+100 PTS</span>
-              </div>
-            </motion.div>
-          )}
+          {/* Explosion / Shatter Visual Flash (原地居中放大顯示 Perfect / Good，零垂直位移，絕不自下而上滑動) */}
+          <AnimatePresence>
+            {isBlasting && (
+              <motion.div
+                key="blast-fx-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-0 flex flex-col items-center justify-center text-center select-none z-40 pointer-events-none"
+              >
+                {blastType === 'perfect' ? (
+                  /* === 1. 完美擊破：金色 Perfect (原地擴散放大，零垂直位移) === */
+                  <motion.div
+                    initial={{ scale: 0.75 }}
+                    animate={{ scale: [0.75, 1.25, 1.15] }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="font-black italic tracking-wider text-5xl sm:text-6xl md:text-7xl text-amber-400 font-mono drop-shadow-[0_0_35px_rgba(251,191,36,0.95)]"
+                    style={{
+                      textShadow: '0 0 25px #fbbf24, 0 0 50px #f59e0b, 0 3px 6px rgba(0,0,0,0.9)',
+                    }}
+                  >
+                    PERFECT
+                  </motion.div>
+                ) : (
+                  /* === 2. 一般擊退：綠色 Good (原地擴散放大，零垂直位移) === */
+                  <motion.div
+                    initial={{ scale: 0.75 }}
+                    animate={{ scale: [0.75, 1.2, 1.1] }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    className="font-black italic tracking-wider text-5xl sm:text-6xl md:text-7xl text-emerald-400 font-mono drop-shadow-[0_0_35px_rgba(52,211,153,0.95)]"
+                    style={{
+                      textShadow: '0 0 25px #34d399, 0 0 50px #10b981, 0 3px 6px rgba(0,0,0,0.9)',
+                    }}
+                  >
+                    GOOD
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Next Incoming Sentence Preview (Upcoming target hovering slightly faded) */}
           {nextQuestion && !isBlasting && (
-            <div className="mt-3 opacity-40 hover:opacity-75 transition-opacity text-stone-400 text-xs flex items-center gap-1.5">
-              <span className="text-[10px] bg-stone-800 px-1.5 py-0.5 rounded">次發預告</span>
-              <span>{nextQuestion.text}</span>
+            <div className="mt-1 opacity-40 hover:opacity-75 transition-opacity text-stone-400 text-[11px] flex items-center gap-1.5">
+              <span className="text-[9px] bg-stone-800 px-1 py-0.2 rounded">次發預告</span>
+              <span className="truncate max-w-[260px]">{nextQuestion.text}</span>
             </div>
           )}
         </div>
 
-        {/* Defense Cannon / Turret Station at Bottom */}
+        {/* Player Space Fighter / Interceptor Station at Bottom (科技感美化戰鬥機) */}
         <div
           ref={turretElementRef}
           className="relative z-10 w-full flex flex-col items-center justify-end pb-1"
         >
-          {/* Laser Cannon Turret Graphics */}
+          {/* Fighter Craft Graphics with dynamic thrusters & laser blasters */}
           <motion.div
-            animate={cannonRecoil ? { y: 6, scale: 0.95 } : { y: 0, scale: 1 }}
+            animate={cannonRecoil ? { y: 6, scale: 0.94 } : { y: 0, scale: 1 }}
             transition={{ duration: 0.1 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center select-none"
           >
-            {/* Cannon Twin Barrels */}
-            <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-6 rounded-t-sm border border-stone-700 ${cannonRecoil ? 'bg-amber-400 shadow-[0_0_12px_#f59e0b]' : 'bg-stone-700'}`} />
-              <div className={`w-2.5 h-6 rounded-t-sm border border-stone-700 ${cannonRecoil ? 'bg-amber-400 shadow-[0_0_12px_#f59e0b]' : 'bg-stone-700'}`} />
-            </div>
-            {/* Turret Base Mount */}
-            <div className="w-16 h-5 bg-gradient-to-b from-stone-700 to-stone-900 rounded-t-xl border border-stone-600 flex items-center justify-center shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            {/* Fighter Main Airframe */}
+            <div className="relative flex flex-col items-center">
+              {/* Twin Plasma Cannons at Wingtips / Nose (打字充能與發射光芒) */}
+              <div className="flex items-center gap-5 sm:gap-7 z-20">
+                <div
+                  className={`w-1.5 sm:w-2 h-4 sm:h-5 rounded-t transition-all duration-200 ${
+                    cannonRecoil
+                      ? 'bg-amber-300 border-t border-amber-100 shadow-[0_0_16px_#f59e0b]'
+                      : typedInput.length > 0
+                      ? 'bg-amber-400 border-t border-amber-200 shadow-[0_0_10px_rgba(245,158,11,0.8)]'
+                      : 'bg-stone-600 border-t border-stone-500'
+                  }`}
+                />
+                <div
+                  className={`w-1.5 sm:w-2 h-4 sm:h-5 rounded-t transition-all duration-200 ${
+                    cannonRecoil
+                      ? 'bg-amber-300 border-t border-amber-100 shadow-[0_0_16px_#f59e0b]'
+                      : typedInput.length > 0
+                      ? 'bg-amber-400 border-t border-amber-200 shadow-[0_0_10px_rgba(245,158,11,0.8)]'
+                      : 'bg-stone-600 border-t border-stone-500'
+                  }`}
+                />
+              </div>
+
+              {/* Fighter Aerodynamic Nose & Wings Silhouette */}
+              <div className="relative -mt-2 flex items-center justify-center">
+                {/* Left Swept Wing */}
+                <div
+                  className="w-8 sm:w-11 h-4 sm:h-5 bg-gradient-to-bl from-stone-700 via-stone-800 to-stone-900 border-t border-l border-stone-600 rounded-tl-lg shadow-md"
+                  style={{ transform: 'skewX(-28deg)' }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/80 m-1 shadow-[0_0_4px_#f59e0b]" />
+                </div>
+
+                {/* Central Cockpit & Reinforced Fuselage */}
+                <div className="relative z-30 w-7 sm:w-9 h-7 sm:h-8 bg-gradient-to-b from-stone-600 via-stone-800 to-stone-950 border border-stone-600 rounded-t-xl flex flex-col items-center justify-between p-1 shadow-lg shadow-black/80">
+                  {/* Glowing Cyan/Amber Pilot Canopy */}
+                  <div
+                    className={`w-3.5 sm:w-4.5 h-3 sm:h-3.5 rounded-t-lg transition-all duration-300 ${
+                      cannonRecoil
+                        ? 'bg-amber-300 shadow-[0_0_12px_#f59e0b]'
+                        : typedInput.length > 0
+                        ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]'
+                        : 'bg-cyan-600/70 shadow-[0_0_6px_rgba(34,211,238,0.4)]'
+                    }`}
+                  />
+                  {/* Integrated 3-stage Reactor Cells */}
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3].map((barIdx) => {
+                      const targetLen = targetText.trim().length || 1;
+                      const isCharged = typedInput.trim().length >= Math.ceil((targetLen / 3) * barIdx);
+                      return (
+                        <span
+                          key={barIdx}
+                          className={`w-1.5 h-1 rounded-xs transition-all duration-150 ${
+                            isCharged
+                              ? 'bg-amber-400 shadow-[0_0_6px_#f59e0b]'
+                              : 'bg-stone-800'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Swept Wing */}
+                <div
+                  className="w-8 sm:w-11 h-4 sm:h-5 bg-gradient-to-br from-stone-700 via-stone-800 to-stone-900 border-t border-r border-stone-600 rounded-tr-lg shadow-md"
+                  style={{ transform: 'skewX(28deg)' }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/80 m-1 ml-auto shadow-[0_0_4px_#f59e0b]" />
+                </div>
+              </div>
+
+              {/* Ion Thrusters Afterburner Plume at Tail */}
+              <div className="flex items-center gap-3 sm:gap-4 -mt-0.5">
+                <div className="w-2.5 h-2 bg-cyan-400/70 rounded-b blur-xs animate-pulse" />
+                <div className="w-3.5 h-2.5 bg-amber-400 rounded-b blur-xs animate-pulse" />
+                <div className="w-2.5 h-2 bg-cyan-400/70 rounded-b blur-xs animate-pulse" />
+              </div>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Primary Typing Control Bar (下方輸入欄 - 支援實體鍵盤與觸控) */}
-      <div className="bg-stone-900/95 border-2 border-amber-500/40 focus-within:border-amber-500 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-2xl space-y-2 sm:space-y-3">
+      {/* Primary Typing Control Bar (下方輸入欄 - 支援 16:9 螢幕舒適字級與觸控) */}
+      <div className="bg-stone-900/95 border-2 border-amber-500/40 focus-within:border-amber-500 rounded-xl p-2.5 sm:p-3.5 shadow-xl space-y-1.5 sm:space-y-2">
         {/* Input Header status */}
         <div className="flex items-center justify-between text-xs text-stone-400">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-stone-200 flex items-center gap-1.5 text-xs sm:text-sm">
-              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 fill-amber-400" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="font-semibold text-stone-200 flex items-center gap-1 text-xs sm:text-sm">
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
               防禦雷射砲輸入欄
             </span>
-            <span className="text-[11px] text-stone-500 hidden sm:inline">
-              輸入完成後按 Enter 或點擊「發射擊破」送出檢驗
-            </span>
+            {countdown !== null ? (
+              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                暖手測試中（倒數結束自動清空正式開局）
+              </span>
+            ) : (
+              <span className="text-[11px] text-stone-500 hidden md:inline">
+                輸入完成後按 Enter 或點擊「發射擊破」送出檢驗
+              </span>
+            )}
           </div>
 
           {/* Composing indicator */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isComposing && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] border border-amber-500/30 animate-pulse">
-                注音/拼音選字中: <strong>{composingBuffer}</strong>
+              <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] border border-amber-500/30 animate-pulse">
+                選字中: <strong>{composingBuffer}</strong>
               </span>
             )}
-            <span className="text-[11px] text-stone-500 hidden xs:inline">
+            <span className="text-[10px] text-stone-500 hidden xs:inline">
               [Enter] 發射 · [Esc] 清空
             </span>
           </div>
         </div>
 
         {/* Input Field & Fire Action */}
-        <div className="relative flex items-center gap-2">
+        <div className="relative flex items-center gap-1.5 sm:gap-2.5">
           <div className="relative flex-1">
             <input
               id="shooter-typing-input"
               ref={inputRef}
               type="text"
               value={typedInput}
-              disabled={false}
+              disabled={isPenaltyActive}
               onChange={handleInputChange}
               onCompositionStart={handleCompositionStart}
               onCompositionUpdate={handleCompositionUpdate}
               onCompositionEnd={handleCompositionEnd}
               onKeyDown={handleKeyDown}
               placeholder={
-                countdown !== null
-                  ? "倒數準備中，可先點此測試輸入法..."
+                isPenaltyActive
+                  ? `⚠️ 跳過懲罰中：學習該題注音，系統凍結 ${penaltySecondsLeft} 秒...`
+                  : countdown !== null
+                  ? `倒數暖手測試中（${countdown}s）：可在此敲打鍵盤測試手感，開局將自動清空...`
                   : "在此輸入空中飄浮的句子，完成後按 Enter 或「發射擊破」..."
               }
               autoFocus
@@ -992,12 +1521,14 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
               autoCapitalize="off"
               spellCheck="false"
               className={`w-full bg-stone-950 border ${
-                countdown !== null
-                  ? 'border-amber-500/50 focus:border-amber-400'
+                isPenaltyActive
+                  ? 'border-amber-400/60 bg-stone-900 text-amber-200'
+                  : countdown !== null
+                  ? 'border-amber-500/70 focus:border-amber-400 ring-1 ring-amber-500/30'
                   : 'border-stone-700 focus:border-amber-500'
-              } rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-stone-100 placeholder-stone-400 focus:outline-none transition-colors shadow-inner`}
+              } rounded-lg px-3.5 sm:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-base md:text-lg text-stone-100 placeholder-stone-400 focus:outline-none transition-colors shadow-inner`}
             />
-            {typedInput && (
+            {typedInput && !isPenaltyActive && (
               <button
                 id="btn-clear-input"
                 onClick={() => {
@@ -1005,52 +1536,71 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                   setLastEvaluation(null);
                   inputRef.current?.focus();
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-stone-500 hover:text-stone-300 rounded-md cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-stone-500 hover:text-stone-300 rounded cursor-pointer"
                 title="清空文字 (Esc)"
               >
-                <Delete className="w-4 h-4" />
+                <Delete className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
           <button
             id="btn-fire-laser"
-            disabled={countdown !== null}
+            disabled={countdown !== null || isPenaltyActive}
             onClick={() => {
-              if (countdown !== null) return;
+              if (countdown !== null || isPenaltyActive) return;
               checkSubmission(typedInput);
               inputRef.current?.focus();
             }}
-            className={`px-3.5 sm:px-5 py-2 sm:py-3 rounded-xl ${
-              countdown !== null
+            className={`px-3.5 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg ${
+              countdown !== null || isPenaltyActive
                 ? 'bg-stone-800 text-stone-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-95 text-stone-950 shadow-lg shadow-amber-500/20 cursor-pointer'
-            } font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shrink-0`}
+                : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-95 text-stone-950 shadow-md shadow-amber-500/20 cursor-pointer'
+            } font-bold text-xs sm:text-sm md:text-base flex items-center gap-1.5 transition-all shrink-0`}
           >
-            <Send className="w-3.5 h-3.5" />
-            <span>{countdown !== null ? '準備中' : '發射擊破'}</span>
+            {isPenaltyActive ? (
+              <span className="flex items-center gap-1 text-amber-400 font-mono">
+                <Clock className="w-3.5 h-3.5 animate-spin" />
+                <span>凍結 {penaltySecondsLeft}s</span>
+              </span>
+            ) : countdown !== null ? (
+              <span className="flex items-center gap-1 text-stone-400 font-mono">
+                <Clock className="w-3.5 h-3.5" />
+                <span>暖手中 ({countdown}s)</span>
+              </span>
+            ) : (
+              <>
+                <Send className="w-3.5 h-3.5" />
+                <span>發射擊破</span>
+              </>
+            )}
           </button>
         </div>
 
-        {/* Auxiliary Control & Information Bar - 離開按鈕已移至頂端，避免與送出按鈕緊鄰誤觸 */}
-        <div className="flex items-center justify-between pt-1 gap-2 text-xs border-t border-stone-800/60">
-          <div className="flex items-center gap-2 text-stone-400 text-[11px] sm:text-xs">
-            <span className="hidden sm:inline">提示：支援注音、倉頡、拼音等各式輸入法，輸入完成後按 Enter 或點擊「發射擊破」送出</span>
-            <span className="sm:hidden text-stone-500">完成後按 Enter 或「發射擊破」</span>
+        {/* Auxiliary Control & Information Bar */}
+        <div className="flex items-center justify-between pt-0.5 gap-2 text-xs border-t border-stone-800/60">
+          <div className="flex items-center gap-1.5 text-stone-400 text-[10px] sm:text-[11px]">
+            <span className="hidden sm:inline">支援注音、倉頡、拼音等輸入法，完成後按 Enter 或點擊「發射擊破」</span>
+            <span className="sm:hidden text-stone-500">按 Enter 或「發射擊破」</span>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-1.5 ml-auto">
             <button
               id="btn-skip-shooter-question"
+              disabled={isPenaltyActive || countdown !== null}
               onClick={(e) => {
                 e.stopPropagation();
-                onNextQuestion();
+                handleTriggerSkip();
               }}
-              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-300 flex items-center gap-1 transition-colors text-[11px] sm:text-xs cursor-pointer"
-              title="跳過當前題目換下一題"
+              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded flex items-center gap-1 transition-colors text-[10px] sm:text-[11px] cursor-pointer ${
+                isPenaltyActive || countdown !== null
+                  ? 'bg-stone-900 text-stone-600 border border-stone-800 cursor-not-allowed'
+                  : 'bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-amber-300'
+              }`}
+              title={isPenaltyActive ? '跳過懲罰中 (凍結 3 秒)' : '跳過當前題目換下一題 (懲罰：停留 3 秒並展示注音)'}
             >
-              <SkipForward className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>跳過此題</span>
+              <SkipForward className="w-3 h-3" />
+              <span>{isPenaltyActive ? `懲罰凍結中 (${penaltySecondsLeft}s)` : '跳過此題'}</span>
             </button>
           </div>
         </div>

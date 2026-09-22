@@ -57,6 +57,8 @@ export default function App() {
     wpm: number;
     accuracy: number;
     maxCombo: number;
+    errorRate?: number;
+    netCpm?: number;
   } | null>(null);
 
   // 多人連線專屬狀態
@@ -216,6 +218,35 @@ export default function App() {
     }
   };
 
+  // 跳過題目處理：靜默從未抽到的題目中補充同難度（或跨難度未出過之新題）至隊尾，確保達成目標答對題數
+  const handleSkipQuestion = () => {
+    setActiveQuestions((prevActive) => {
+      const activeIds = new Set(prevActive.map((q) => q.id));
+      const unpickedPool = questionBank.filter((q) => !activeIds.has(q.id));
+
+      if (unpickedPool.length === 0) {
+        // 若全題庫已出完（極限情況全題庫已在佇列中），絕不重複塞入已跳過的卡住題目，避免死循環
+        return prevActive;
+      }
+
+      // 1. 優先挑選同難度的新題
+      const targetDifficulty = gameMode === 'multiplayer' ? roomSettings.difficulty : difficulty;
+      let candidates = unpickedPool;
+      if (targetDifficulty !== 'all') {
+        const sameDiffCandidates = unpickedPool.filter((q) => q.difficulty === targetDifficulty);
+        if (sameDiffCandidates.length > 0) {
+          candidates = sameDiffCandidates;
+        }
+      }
+
+      // 2. 隨機挑選一道未曾出現過的新題
+      const picked = candidates[Math.floor(Math.random() * candidates.length)];
+      if (!picked) return prevActive;
+
+      return [...prevActive, picked];
+    });
+  };
+
   // 單人/多人挑戰結算
   const handleFinishChallenge = (stats: {
     totalChars: number;
@@ -226,6 +257,8 @@ export default function App() {
     wpm: number;
     accuracy: number;
     maxCombo: number;
+    errorRate?: number;
+    netCpm?: number;
   }) => {
     setLatestStats(stats);
     if (gameMode === 'multiplayer') {
@@ -289,7 +322,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="h-screen max-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden overflow-y-auto sm:overflow-y-hidden">
       {/* Global Navigation Header */}
       <Header
         soundOn={soundOn}
@@ -302,7 +335,7 @@ export default function App() {
       />
 
       {/* Main Game Stage */}
-      <main className="flex-1 flex flex-col items-center justify-center p-2 sm:p-6 w-full relative">
+      <main className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2.5 w-full relative min-h-0 overflow-y-auto sm:overflow-y-hidden">
         {/* 連線通知 Toast */}
         <AnimatePresence>
           {noticeMessage && (
@@ -346,6 +379,7 @@ export default function App() {
             questions={activeQuestions}
             questionIndex={currentQuestionIndex}
             onNextQuestion={handleNextQuestion}
+            onSkipQuestion={handleSkipQuestion}
             onFinishChallenge={handleFinishChallenge}
             onQuit={handleQuitGame}
             isMultiplayer={gameMode === 'multiplayer'}

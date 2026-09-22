@@ -81,30 +81,30 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   ];
 
   return (
-    <div id="game-setup-container" className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-8 space-y-3 sm:space-y-6 animate-fade-in">
+    <div id="game-setup-container" className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-1 sm:py-3 space-y-2 sm:space-y-4 animate-fade-in">
       {/* Hero Banner / Introduction */}
-      <div className="text-center space-y-1.5 sm:space-y-2.5">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] sm:text-xs font-medium">
-          <Compass className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+      <div className="text-center space-y-1 sm:space-y-1.5">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] sm:text-xs font-medium">
+          <Compass className="w-3 h-3 text-amber-400" />
           <span>打字機動戰士 · 空中防衛線</span>
         </div>
-        <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-stone-100 tracking-tight">
+        <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-stone-100 tracking-tight">
           妙語如珠，例不虛發
         </h1>
-        <p className="text-[11px] sm:text-sm text-stone-400 max-w-xl mx-auto leading-relaxed hidden xs:block">
+        <p className="text-[11px] sm:text-xs text-stone-400 max-w-xl mx-auto leading-normal hidden xs:block">
           詞語與句子在空中飄浮，在下方輸入欄鍵入整句，按 Enter 或點擊「發射擊破」即可進行雷射打擊！全部字元正確即可一擊擊破。
         </p>
 
         {/* 遊戲模式選擇 (單人練習 vs 多人連線對戰 2-6 人) */}
-        <div className="pt-1 flex flex-row items-center justify-center gap-2 max-w-md mx-auto">
-          <div className="w-1/2 p-1 bg-amber-500/20 border border-amber-500 rounded-xl flex items-center justify-center gap-1.5 py-2 text-amber-300 font-bold text-xs sm:text-sm shadow-sm">
+        <div className="pt-0.5 flex flex-row items-center justify-center gap-2 max-w-sm mx-auto">
+          <div className="w-1/2 p-1 bg-amber-500/20 border border-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center gap-1.5 py-1.5 text-amber-300 font-bold text-xs sm:text-sm shadow-sm">
             <Target className="w-3.5 h-3.5 text-amber-400" />
             單人冒險挑戰
           </div>
           <button
             type="button"
             onClick={onSwitchToMultiplayer}
-            className="w-1/2 p-1 bg-stone-900 hover:bg-stone-800 border border-stone-700 hover:border-amber-500/50 rounded-xl flex items-center justify-center gap-1.5 py-2 text-stone-300 hover:text-amber-300 font-semibold text-xs sm:text-sm transition-all cursor-pointer group"
+            className="w-1/2 p-1 bg-stone-900 hover:bg-stone-800 border border-stone-700 hover:border-amber-500/50 rounded-lg sm:rounded-xl flex items-center justify-center gap-1.5 py-1.5 text-stone-300 hover:text-amber-300 font-semibold text-xs sm:text-sm transition-all cursor-pointer group"
           >
             <Users className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
             <span>多人連線 (2-6人)</span>
@@ -116,18 +116,18 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       </div>
 
       {/* Main Settings Card */}
-      <div className="bg-stone-900/90 border border-stone-800 rounded-2xl p-3.5 sm:p-7 shadow-xl shadow-stone-950/50 space-y-3.5 sm:space-y-6">
+      <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl shadow-stone-950/50 space-y-2.5 sm:space-y-4">
         {/* Step 1: Select Question Count */}
-        <div className="space-y-1.5 sm:space-y-2.5">
+        <div className="space-y-1 sm:space-y-1.5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs sm:text-base font-bold text-stone-200 flex items-center gap-1.5 sm:gap-2">
-              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500/20 text-amber-400 text-[11px] sm:text-xs flex items-center justify-center font-mono">1</span>
+            <h2 className="text-xs sm:text-sm font-bold text-stone-200 flex items-center gap-1.5">
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">1</span>
               選擇挑戰題數
             </h2>
-            <span className="text-[11px] sm:text-xs text-stone-400">自題庫隨機抽取</span>
+            <span className="text-[10px] sm:text-xs text-stone-400">自題庫隨機抽取</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {countOptions.map((opt) => {
               const isSelected = questionCount === opt.count;
               return (
@@ -135,20 +135,19 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   key={opt.count}
                   id={`btn-count-${opt.count}`}
                   onClick={() => setQuestionCount(opt.count)}
-                  className={`p-2 sm:p-3.5 rounded-xl border text-center sm:text-left transition-all relative overflow-hidden group ${
+                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border text-center sm:text-left transition-all relative overflow-hidden group ${
                     isSelected
                       ? 'bg-amber-500/15 border-amber-500 text-amber-300 ring-1 ring-amber-500/50'
                       : 'bg-stone-950/50 border-stone-800 text-stone-300 hover:border-stone-700 hover:bg-stone-950'
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row items-center justify-between sm:mb-1">
-                    <span className="font-bold text-xs sm:text-base">{opt.count} 題</span>
+                  <div className="flex flex-col sm:flex-row items-center justify-between sm:mb-0.5">
+                    <span className="font-bold text-xs sm:text-sm">{opt.count} 題</span>
                     <span className="hidden sm:inline">{opt.icon}</span>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-stone-400 font-medium">
+                  <p className="text-[10px] text-stone-400 font-medium">
                     {opt.count === 5 ? '快速熱身' : opt.count === 10 ? '標準挑戰' : '耐力大考驗'}
                   </p>
-                  <p className="text-[9px] text-stone-500 hidden sm:block mt-0.5">{opt.timeEst}</p>
                 </button>
               );
             })}
@@ -156,16 +155,16 @@ export const GameSetup: React.FC<GameSetupProps> = ({
         </div>
 
         {/* Step 2: Select Difficulty */}
-        <div className="space-y-1.5 sm:space-y-2.5">
+        <div className="space-y-1 sm:space-y-1.5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs sm:text-base font-bold text-stone-200 flex items-center gap-1.5 sm:gap-2">
-              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-500/20 text-amber-400 text-[11px] sm:text-xs flex items-center justify-center font-mono">2</span>
+            <h2 className="text-xs sm:text-sm font-bold text-stone-200 flex items-center gap-1.5">
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">2</span>
               選擇難度等級
             </h2>
-            <span className="text-[11px] sm:text-xs text-stone-400">共 {totalCount} 篇題庫</span>
+            <span className="text-[10px] sm:text-xs text-stone-400">共 {totalCount} 篇題庫</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {difficultyOptions.map((opt) => {
               const isSelected = difficulty === opt.id;
               return (
@@ -173,7 +172,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   key={opt.id}
                   id={`btn-diff-${opt.id}`}
                   onClick={() => setDifficulty(opt.id)}
-                  className={`p-2 sm:p-3.5 rounded-xl border text-left transition-all relative group ${
+                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border text-left transition-all relative group ${
                     isSelected
                       ? `ring-2 ring-amber-500/60 border-amber-500 bg-stone-950`
                       : `bg-stone-950/50 border-stone-800 text-stone-300 hover:border-stone-700 hover:bg-stone-950`
@@ -181,17 +180,16 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                 >
                   <div className="flex items-center justify-between mb-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-xs sm:text-base text-stone-100">{opt.title}</span>
-                      <span className="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-stone-800 text-stone-300 font-mono">
+                      <span className="font-bold text-xs sm:text-sm text-stone-100">{opt.title}</span>
+                      <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full bg-stone-800 text-stone-300 font-mono">
                         {opt.count}
                       </span>
                     </div>
-                    <span className="text-[9px] sm:text-[10px] font-medium text-stone-400 px-1.5 py-0.2 rounded bg-stone-800/80 hidden xs:inline">
+                    <span className="text-[9px] font-medium text-stone-400 px-1 py-0.2 rounded bg-stone-800/80 hidden xs:inline">
                       {opt.tag}
                     </span>
                   </div>
                   <p className="text-[10px] sm:text-xs text-amber-400/90 font-medium truncate">{opt.sub}</p>
-                  <p className="text-xs text-stone-400 leading-relaxed hidden sm:block mt-1">{opt.desc}</p>
                 </button>
               );
             })}
@@ -199,18 +197,18 @@ export const GameSetup: React.FC<GameSetupProps> = ({
         </div>
 
         {/* Start Game Action */}
-        <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-stone-400">
+        <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-stone-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>自動計算 CPM、準確率並保存紀錄</span>
+            <span>自動計算 CPM、準確率並保存個人排行榜</span>
           </div>
 
           <button
             id="btn-start-challenge"
             onClick={onStartGame}
-            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 active:scale-98 transition-all cursor-pointer"
+            className="w-full sm:w-auto px-5 sm:px-7 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 active:scale-98 transition-all cursor-pointer"
           >
-            <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+            <Play className="w-4 h-4 fill-current" />
             <span>開始 {questionCount} 題挑戰</span>
           </button>
         </div>

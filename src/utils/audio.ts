@@ -219,6 +219,38 @@ export function playExplosionSound() {
 }
 
 /**
+ * 完美擊破 (100% 全對) 專屬勝利清脆高音與和弦樂音
+ */
+export function playPerfectClearSound() {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51]; // C5, E5, G5, C6, E6
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = ctx.currentTime + index * 0.05;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.18, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.32);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.35);
+    });
+  } catch {
+    // ignore
+  }
+}
+
+/**
  * 結算勝利歡呼樂音
  */
 export function playVictorySound() {
@@ -287,6 +319,43 @@ export function playCountdownBeep(isStart: boolean = false) {
       osc.start();
       osc.stop(ctx.currentTime + 0.13);
     }
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * 跳過題目懲罰音效 (雙重低沉警示音)
+ */
+export function playPenaltySound() {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(220, ctx.currentTime); // A3
+    osc1.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.15);
+    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start();
+    osc1.stop(ctx.currentTime + 0.16);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sawtooth';
+    osc2.frequency.setValueAtTime(160, ctx.currentTime + 0.18);
+    osc2.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.35);
+    gain2.gain.setValueAtTime(0.18, ctx.currentTime + 0.18);
+    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.38);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.18);
+    osc2.stop(ctx.currentTime + 0.4);
   } catch {
     // ignore
   }

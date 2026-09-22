@@ -26,6 +26,8 @@ export interface GameRecord {
   timeElapsedSeconds: number;
   grade: 'S+' | 'S' | 'A' | 'B' | 'C' | 'D';
   maxCombo: number;
+  errorRate?: number;
+  netCpm?: number;
 }
 
 export type GameStatus = 'idle' | 'playing' | 'completed';
