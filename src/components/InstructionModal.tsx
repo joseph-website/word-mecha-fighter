@@ -193,7 +193,7 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-amber-400 font-bold">•</span>
-                      <span><strong>一鍵發射擊破</strong>：輸入完畢後，直接點擊輸入欄右側顯眼的金色 <span className="text-amber-300 font-bold">「發射擊破」</span> 按鈕（或軟體鍵盤上的前往 / 送出鍵）進行檢驗。</span>
+                      <span><strong>一鍵發射擊破</strong>：輸入完畢後，直接點擊輸入欄右側顯眼的金色 <span className="text-amber-300 font-bold">「發射擊破」</span> 按鈕（或軟體鍵盤上的前往 / 送出鍵）即可發射擊破。</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-amber-400 font-bold">•</span>

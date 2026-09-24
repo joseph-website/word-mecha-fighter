@@ -31,6 +31,8 @@ interface ResultModalProps {
     maxCombo: number;
     errorRate?: number;
     netCpm?: number;
+    missingChars?: number;
+    missingRate?: number;
   };
   difficulty: string;
   questionCount: number;
@@ -58,7 +60,16 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const [shareFeedback, setShareFeedback] = useState<string>('');
 
-  const grade = calculateGrade(stats.cpm, stats.accuracy);
+  // 錯字率與漏字率計算
+  const missingChars = stats.missingChars ?? 0;
+  const missingRate =
+    stats.missingRate !== undefined
+      ? stats.missingRate
+      : stats.totalChars > 0
+      ? Math.max(0, Math.round((missingChars / stats.totalChars) * 1000) / 10)
+      : 0;
+
+  const grade = calculateGrade(stats.cpm, stats.accuracy, missingRate);
 
   // 錯字率與 Net CPM 計算 (依全局所有題目總字數與打錯字數)
   const errorRate =
@@ -116,6 +127,8 @@ export const ResultModal: React.FC<ResultModalProps> = ({
       maxCombo: stats.maxCombo,
       errorRate,
       netCpm,
+      missingChars,
+      missingRate,
     };
 
     saveLeaderboardRecord(record);
@@ -126,8 +139,8 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   // 格式化分享文案
   const shareText = `🚀 我在「打字機動戰士」成功擊破了 ${questionCount} 艘空中飄浮【${difficultyLabel}】！
 ⚡ 擊破速度：${stats.cpm} 字/分 (Net CPM)
-🎯 命中準確率：${stats.accuracy}% (錯字率：${errorRate}%)
-💥 擊破字數：${stats.correctChars} / ${stats.totalChars} 字
+🎯 命中準確率：${stats.accuracy}% (錯字率：${errorRate}% / 漏字率：${missingRate}%)
+💥 擊破字數：${stats.correctChars} / ${stats.totalChars} 字${missingChars > 0 ? ` (漏打 ${missingChars} 字)` : ' (零漏字)'}
 ⏱️ 防禦耗時：${stats.timeElapsedSeconds.toFixed(1)} 秒
 🔥 最高連擊：${stats.maxCombo} Combo
 🎖️ 戰鬥評級：【${grade} 級】！
@@ -204,7 +217,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
           <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
             <span className="text-[11px] text-stone-400 block mb-1">淨打字速度</span>
             <span className="text-xl sm:text-2xl font-bold font-mono text-amber-400">{stats.cpm}</span>
@@ -215,6 +228,16 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             <span className="text-[11px] text-stone-400 block mb-1">命中準確率</span>
             <span className="text-xl sm:text-2xl font-bold font-mono text-emerald-400">{stats.accuracy}%</span>
             <span className="text-[10px] text-rose-400/90 block font-mono">錯字率 {errorRate}%</span>
+          </div>
+
+          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
+            <span className="text-[11px] text-stone-400 block mb-1">漏字率</span>
+            <span className={`text-xl sm:text-2xl font-bold font-mono ${missingChars === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {missingRate}%
+            </span>
+            <span className="text-[10px] text-stone-400 block font-mono">
+              {missingChars > 0 ? `漏打 ${missingChars} 字` : '零漏字 ⭐'}
+            </span>
           </div>
 
           <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
@@ -231,7 +254,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             <span className="text-[10px] text-stone-500 block">秒</span>
           </div>
 
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between col-span-2 sm:col-span-1">
+          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
             <span className="text-[11px] text-stone-400 block mb-1">最高連擊</span>
             <span className="text-xl sm:text-2xl font-bold font-mono text-orange-400">{stats.maxCombo}</span>
             <span className="text-[10px] text-stone-500 block">Combo</span>

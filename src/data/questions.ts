@@ -1,7 +1,7 @@
 import { QuestionItem, Difficulty, QuestionCount } from '../types';
 import defaultQuestionsData from './defaultQuestions.json';
 
-const CUSTOM_QUESTIONS_KEY = 'chinese_typing_custom_questions_v21';
+const CUSTOM_QUESTIONS_KEY = 'chinese_typing_custom_questions_v23';
 
 export const defaultQuestions: QuestionItem[] = defaultQuestionsData as QuestionItem[];
 

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Volume2, VolumeX, Trophy, BookOpen, HelpCircle } from 'lucide-react';
-import { toggleSound } from '../utils/audio';
+import { Trophy, BookOpen, HelpCircle } from 'lucide-react';
+import { VolumeControl } from './VolumeControl';
 
 interface HeaderProps {
   soundOn: boolean;
-  setSoundOn: (val: boolean) => void;
+  volume: number;
+  onVolumeChange: (val: number) => void;
+  onToggleSound: () => void;
   onOpenLeaderboard: () => void;
   onOpenQuestionBank: () => void;
   onOpenInstructions: () => void;
@@ -14,18 +16,15 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   soundOn,
-  setSoundOn,
+  volume,
+  onVolumeChange,
+  onToggleSound,
   onOpenLeaderboard,
   onOpenQuestionBank,
   onOpenInstructions,
   onGoHome,
   isPlaying,
 }) => {
-  const handleSoundToggle = () => {
-    const newState = toggleSound();
-    setSoundOn(newState);
-  };
-
   return (
     <header
       id="app-header"
@@ -70,26 +69,19 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden sm:inline">說明</span>
           </button>
 
-          {/* Sound Mute Toggle */}
-          <button
-            id="btn-toggle-sound"
-            onClick={handleSoundToggle}
-            className={`p-1.5 rounded-lg border transition-colors ${
-              soundOn
-                ? 'bg-stone-900 border-stone-800 text-amber-400 hover:bg-stone-800'
-                : 'bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300'
-            }`}
-            title={soundOn ? '音效已開啟 (點擊靜音)' : '音效已關閉 (點擊開啟)'}
-            aria-label="音效切換"
-          >
-            {soundOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-          </button>
+          {/* Volume Control (Slider + Mute Toggle) */}
+          <VolumeControl
+            volume={volume}
+            soundOn={soundOn}
+            onVolumeChange={onVolumeChange}
+            onToggleSound={onToggleSound}
+          />
 
           {/* Question Bank Manager */}
           <button
             id="btn-open-question-bank"
             onClick={onOpenQuestionBank}
-            className="px-2 py-1 sm:px-2.5 sm:py-1 text-xs font-medium rounded-lg bg-stone-900 border border-stone-800 text-stone-300 hover:text-amber-400 hover:border-amber-500/30 transition-all flex items-center gap-1"
+            className="px-2 py-1 sm:px-2.5 sm:py-1 text-xs font-medium rounded-lg bg-stone-900 border border-stone-800 text-stone-300 hover:text-amber-400 hover:border-amber-500/30 transition-all flex items-center gap-1 cursor-pointer"
             title="編輯題庫"
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-400" />

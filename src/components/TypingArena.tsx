@@ -18,7 +18,7 @@ import {
   LogOut,
   CheckCircle2
 } from 'lucide-react';
-import { QuestionItem } from '../types';
+import { QuestionItem, ReviewCharRecord } from '../types';
 import {
   playLaserShotSound,
   playExplosionSound,
@@ -28,7 +28,8 @@ import {
   playErrorSound,
   playQuestionCompleteSound,
   playCountdownBeep,
-  playPenaltySound
+  playPenaltySound,
+  playComboSurgeSound
 } from '../utils/audio';
 import { getSentenceZhuyin } from '../utils/zhuyin';
 
@@ -48,6 +49,9 @@ interface TypingArenaProps {
     maxCombo: number;
     errorRate?: number;
     netCpm?: number;
+    missingChars?: number;
+    missingRate?: number;
+    reviewItems?: ReviewCharRecord[];
   }) => void;
   onQuit: () => void;
   isMultiplayer?: boolean;
@@ -170,6 +174,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const [accumulatedCorrect, setAccumulatedCorrect] = useState<number>(0);
   const [accumulatedTargetChars, setAccumulatedTargetChars] = useState<number>(0);
   const [accumulatedErrors, setAccumulatedErrors] = useState<number>(0);
+  const [accumulatedMissing, setAccumulatedMissing] = useState<number>(0);
   const [currentCombo, setCurrentCombo] = useState<number>(0);
   const [maxCombo, setMaxCombo] = useState<number>(0);
 
@@ -407,6 +412,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
   // 全半形標點相容檢查
   function isCharMatch(inputChar: string, targetChar: string): boolean {
+    if (!inputChar || !targetChar) return false;
     if (inputChar === targetChar) return true;
     const punctMap: Record<string, string[]> = {
       '，': ['，', ','],
@@ -416,6 +422,14 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       '；': ['；', ';'],
       '：': ['：', ':'],
       '、': ['、', '\\'],
+      '「': ['「', '"', "'", '“'],
+      '」': ['」', '"', "'", '”'],
+      '『': ['『', '"', "'", '“'],
+      '』': ['』', '"', "'", '”'],
+      '—': ['—', '-', '–'],
+      '～': ['～', '~'],
+      '（': ['（', '('],
+      '）': ['）', ')'],
     };
     if (punctMap[targetChar] && punctMap[targetChar].includes(inputChar)) {
       return true;
@@ -423,17 +437,98 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     return false;
   }
 
-  // 檢查整句是否完全符合 (相容中英文全半形標點)
-  function isSentenceMatched(input: string, target: string): boolean {
-    const trimmedInput = input.trim();
-    const trimmedTarget = target.trim();
-    if (trimmedInput.length !== trimmedTarget.length || trimmedInput.length === 0) return false;
-    for (let i = 0; i < trimmedInput.length; i++) {
-      if (!isCharMatch(trimmedInput[i], trimmedTarget[i])) {
-        return false;
+  // LCS 最長公共子序列動態對齊比對演算法 (解決漏打字/標點符號造成後半段骨牌式整句誤判)
+  function evaluateInputLCS(target: string, user: string) {
+    const targetChars = target.split('');
+    const userChars = user.split('');
+    const M = targetChars.length;
+    const N = userChars.length;
+
+    const MATCH = 2;
+    const MISMATCH = -1;
+    const GAP_T = -1.5;
+    const GAP_U = -1.5;
+
+    const dp = Array.from({ length: M + 1 }, () => new Float64Array(N + 1));
+
+    for (let i = 0; i <= M; i++) dp[i][0] = i * GAP_U;
+    for (let j = 0; j <= N; j++) dp[0][j] = j * GAP_T;
+
+    for (let i = 1; i <= M; i++) {
+      for (let j = 1; j <= N; j++) {
+        const matchScore = isCharMatch(userChars[j - 1], targetChars[i - 1]) ? MATCH : MISMATCH;
+        dp[i][j] = Math.max(
+          dp[i - 1][j - 1] + matchScore,
+          dp[i - 1][j] + GAP_U,
+          dp[i][j - 1] + GAP_T
+        );
       }
     }
-    return true;
+
+    let i = M;
+    let j = N;
+    const alignments: { targetChar: string | null; userChar: string | null }[] = [];
+
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0) {
+        const matchScore = isCharMatch(userChars[j - 1], targetChars[i - 1]) ? MATCH : MISMATCH;
+        if (Math.abs(dp[i][j] - (dp[i - 1][j - 1] + matchScore)) < 1e-6) {
+          alignments.push({ targetChar: targetChars[i - 1], userChar: userChars[j - 1] });
+          i--;
+          j--;
+          continue;
+        }
+      }
+      if (i > 0 && Math.abs(dp[i][j] - (dp[i - 1][j] + GAP_U)) < 1e-6) {
+        alignments.push({ targetChar: targetChars[i - 1], userChar: null });
+        i--;
+        continue;
+      }
+      if (j > 0) {
+        alignments.push({ targetChar: null, userChar: userChars[j - 1] });
+        j--;
+        continue;
+      }
+    }
+
+    alignments.reverse();
+
+    const evaluatedChars: CharEvaluation[] = [];
+    let correctCount = 0;
+    let wrongCount = 0;
+    let missingCount = 0;
+    const excessChars: string[] = [];
+
+    for (const pair of alignments) {
+      if (pair.targetChar !== null) {
+        if (pair.userChar !== null) {
+          if (isCharMatch(pair.userChar, pair.targetChar)) {
+            evaluatedChars.push({ char: pair.targetChar, status: 'correct', userChar: pair.userChar });
+            correctCount++;
+          } else {
+            evaluatedChars.push({ char: pair.targetChar, status: 'wrong', userChar: pair.userChar });
+            wrongCount++;
+          }
+        } else {
+          evaluatedChars.push({ char: pair.targetChar, status: 'unanswered' });
+          missingCount++;
+        }
+      } else {
+        if (pair.userChar !== null) {
+          excessChars.push(pair.userChar);
+        }
+      }
+    }
+
+    return {
+      evaluatedChars,
+      correctCount,
+      wrongCount,
+      missingCount,
+      hasExcess: excessChars.length > 0,
+      excessText: excessChars.join(''),
+      excessCount: excessChars.length,
+    };
   }
 
   // 發射雷射動畫 (區分完美雙重碧綠/金光束與一般重創橙紅光束)
@@ -468,6 +563,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     hitCorrectChars: number,
     questionTargetLen: number,
     questionErrors: number,
+    questionMissing: number,
     damagePercent: number,
     isAllCorrect: boolean
   ) => {
@@ -509,14 +605,20 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     if (newCombo > maxCombo) {
       setMaxCombo(newCombo);
     }
+    // 連擊音效：達成連續擊破時播放階梯式充能音效
+    if (newCombo > 1) {
+      playComboSurgeSound(newCombo);
+    }
 
     const updatedTotalCorrect = accumulatedCorrect + hitCorrectChars;
     const updatedTotalTargetChars = accumulatedTargetChars + questionTargetLen;
     const updatedTotalErrors = accumulatedErrors + questionErrors;
+    const updatedTotalMissing = accumulatedMissing + questionMissing;
 
     setAccumulatedCorrect(updatedTotalCorrect);
     setAccumulatedTargetChars(updatedTotalTargetChars);
     setAccumulatedErrors(updatedTotalErrors);
+    setAccumulatedMissing(updatedTotalMissing);
 
     const currentTotal = questionsRef.current.length;
 
@@ -524,12 +626,21 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     if (questionIndex + 1 >= currentTotal) {
       const finalTimeSec = Math.max((Date.now() - (startTime || Date.now())) / 1000, 1);
       const grossCPM = Math.round(updatedTotalCorrect / (finalTimeSec / 60));
+      
+      // 方案 B：漏打字數視同未擊中，直接折抵最終準確率
       const finalAcc =
         updatedTotalTargetChars > 0
           ? Math.round((updatedTotalCorrect / updatedTotalTargetChars) * 1000) / 10
           : 100;
       const finalErrorRate = Math.max(0, Math.round((100 - finalAcc) * 10) / 10);
-      const netCPM = Math.round(grossCPM * (finalAcc / 100));
+      const finalMissingRate =
+        updatedTotalTargetChars > 0
+          ? Math.round((updatedTotalMissing / updatedTotalTargetChars) * 1000) / 10
+          : 0;
+
+      // 方案 A：淨字速依準確率折抵，每漏打一字直接施予 1.5 扣罰，徹底杜絕省略標點提速
+      const penaltyDeduction = Math.round(updatedTotalMissing * 1.5);
+      const netCPM = Math.max(0, Math.round(grossCPM * (finalAcc / 100)) - penaltyDeduction);
       const finalWPM = Math.round(netCPM / 2);
 
       if (onProgressTick) {
@@ -560,6 +671,8 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           maxCombo: Math.max(newCombo, maxCombo),
           errorRate: finalErrorRate,
           netCpm: netCPM,
+          missingChars: updatedTotalMissing,
+          missingRate: finalMissingRate,
         });
       }, isAllCorrect ? 750 : 550);
     } else {
@@ -571,7 +684,8 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           updatedTotalTargetChars > 0
             ? Math.round((updatedTotalCorrect / updatedTotalTargetChars) * 1000) / 10
             : 100;
-        const curNetCPM = Math.round(curGrossCPM * (curAcc / 100));
+        const curPenalty = Math.round(updatedTotalMissing * 1.5);
+        const curNetCPM = Math.max(0, Math.round(curGrossCPM * (curAcc / 100)) - curPenalty);
         onProgressTick({
           questionIndex: nextIdx,
           currentProgress: 0,
@@ -584,10 +698,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
         });
       }
       setTimeout(() => {
+        onNextQuestion();
         setIsBlasting(false);
         setBlastType(null);
-        onNextQuestion();
-      }, isAllCorrect ? 650 : 500);
+      }, isAllCorrect ? 550 : 450);
     }
   };
 
@@ -608,33 +722,18 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       return;
     }
 
-    // 進行字元逐一對比：送出後才針對正確的字顯示綠色、對錯誤的字顯示紅色
-    const evaluated: CharEvaluation[] = [];
-    let correctCount = 0;
-    let wrongCount = 0;
+    // 使用 LCS 智慧動態對齊比對：徹底避免漏打一個標點符號造成後續字串全數骨牌式錯位
+    const {
+      evaluatedChars: evaluated,
+      correctCount,
+      wrongCount,
+      missingCount,
+      hasExcess,
+      excessText,
+      excessCount,
+    } = evaluateInputLCS(targetTrimmed, trimmed);
 
-    for (let i = 0; i < targetTrimmed.length; i++) {
-      const targetChar = targetTrimmed[i];
-      if (i < trimmed.length) {
-        const userChar = trimmed[i];
-        const isMatch = isCharMatch(userChar, targetChar);
-        if (isMatch) {
-          evaluated.push({ char: targetChar, status: 'correct', userChar });
-          correctCount++;
-        } else {
-          evaluated.push({ char: targetChar, status: 'wrong', userChar });
-          wrongCount++;
-        }
-      } else {
-        evaluated.push({ char: targetChar, status: 'unanswered' });
-      }
-    }
-
-    const missingCount = Math.max(0, targetTrimmed.length - trimmed.length);
-    const hasExcess = trimmed.length > targetTrimmed.length;
-    const excessText = hasExcess ? trimmed.slice(targetTrimmed.length) : '';
-    const excessCount = hasExcess ? excessText.length : 0;
-    const isAllCorrect = correctCount === targetTrimmed.length && !hasExcess;
+    const isAllCorrect = correctCount === targetTrimmed.length && !hasExcess && missingCount === 0 && wrongCount === 0;
     const damagePercent = Math.round((correctCount / Math.max(targetTrimmed.length, 1)) * 100);
     const isPassed = damagePercent >= 70; // 達到 70% 傷害門檻即過關擊墜！
     const questionErrors = wrongCount + excessCount + missingCount;
@@ -657,7 +756,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     if (isPassed) {
       // 達成 70% 傷害門檻：擊沉敵機並推進下一題
       triggerLaserShot(isAllCorrect);
-      handleDestroyTarget(correctCount, targetTrimmed.length, questionErrors, damagePercent, isAllCorrect);
+      handleDestroyTarget(correctCount, targetTrimmed.length, questionErrors, missingCount, damagePercent, isAllCorrect);
       setTypedInput('');
     } else {
       // 傷害不足 70% 門檻：傷害不足，播放警告與受挫晃動
@@ -890,10 +989,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                   ? 'text-stone-600 bg-stone-950 border-stone-900 cursor-not-allowed'
                   : 'text-stone-400 hover:text-amber-400 bg-stone-900 border-stone-800 hover:border-amber-500/50'
               }`}
-              title={isPenaltyActive ? '跳過懲罰中 (凍結 3 秒)' : '跳過當前目標 (懲罰：停留 3 秒並展示注音)'}
+              title={isPenaltyActive ? '凍結中' : '跳過當前題目（懲罰3秒）'}
             >
               <SkipForward className="w-3 h-3" />
-              <span>{isPenaltyActive ? `懲罰 ${penaltySecondsLeft}s` : '跳過'}</span>
+              <span>{isPenaltyActive ? '凍結中' : '跳過'}</span>
             </button>
           </div>
         </div>
@@ -1099,7 +1198,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
               <motion.div
                 key={currentQuestion.id}
                 ref={targetElementRef}
-                initial={{ y: -50, opacity: 0, scale: 0.8 }}
+                initial={{ y: -30, opacity: 0, scale: 0.95 }}
                 animate={{
                   y: [0, -5, 0],
                   opacity: 1,
@@ -1107,14 +1206,14 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                   x: targetJolt ? 1 : 0,
                 }}
                 exit={{
-                  scale: [1, 1.2, 0],
-                  opacity: [1, 1, 0],
-                  filter: ['blur(0px)', 'blur(4px)', 'blur(10px)'],
+                  opacity: 0,
+                  scale: 0.85,
+                  transition: { duration: 0.1 },
                 }}
                 transition={{
                   y: { repeat: Infinity, duration: 3.5, ease: 'easeInOut' },
                   scale: { duration: 0.08 },
-                  opacity: { duration: 0.25 },
+                  opacity: { duration: 0.2 },
                 }}
                 className="w-full max-w-xl sm:max-w-2xl xl:max-w-3xl mx-auto flex flex-col items-center group cursor-pointer"
                 onClick={() => inputRef.current?.focus()}
@@ -1159,11 +1258,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     <div className="w-full flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-amber-500/30">
                       <span className="text-[11px] sm:text-xs font-bold text-amber-400 flex items-center gap-1.5 animate-pulse">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span>
-                          {isDefaultQuestion
-                            ? '觸發跳過懲罰！學習此題注音 · 凍結停留 3 秒'
-                            : '觸發跳過懲罰！題目跳過凍結停留 3 秒'}
-                        </span>
+                        <span>暫停3秒</span>
                       </span>
                       <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold text-xs border border-amber-500/40 shrink-0">
                         {penaltySecondsLeft}s
@@ -1205,13 +1300,21 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                         const isEvaluated = Boolean(lastEvaluation);
                         const isCorrect = evalItem?.status === 'correct';
                         const isWrong = evalItem?.status === 'wrong';
+                        const isMissing = evalItem?.status === 'unanswered';
 
                         let charStyle = 'text-stone-100';
+                        let charTitle: string | undefined = undefined;
+
                         if (isEvaluated) {
                           if (isCorrect) {
                             charStyle = 'text-emerald-400 font-extrabold drop-shadow-[0_0_10px_rgba(52,211,153,0.9)] bg-emerald-950/40 border-b-2 border-emerald-400 rounded-t px-0.5';
+                            charTitle = '命中正確';
                           } else if (isWrong) {
                             charStyle = 'text-rose-400 font-extrabold drop-shadow-[0_0_10px_rgba(244,63,94,0.9)] bg-rose-950/70 border-b-2 border-rose-500 rounded-t px-0.5 animate-pulse';
+                            charTitle = evalItem?.userChar ? `此處輸入為「${evalItem.userChar}」` : '字元輸入錯誤';
+                          } else if (isMissing) {
+                            charStyle = 'text-amber-300/90 font-bold bg-amber-950/40 border-b-2 border-dashed border-amber-400/80 rounded-t px-0.5';
+                            charTitle = '此字元漏打/遺漏';
                           } else {
                             charStyle = 'text-stone-500 font-normal px-0.5';
                           }
@@ -1221,6 +1324,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                           <span
                             key={index}
                             className={`relative inline-block transition-all duration-150 ${charStyle}`}
+                            title={charTitle}
                           >
                             {char}
                           </span>
@@ -1241,16 +1345,13 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
                   {/* 跳過懲罰時的倒數進度條 */}
                   {isPenaltyActive && (
-                    <div className="w-full mt-2 space-y-1">
+                    <div className="w-full mt-2">
                       <div className="w-full bg-stone-950/80 rounded-full h-1.5 overflow-hidden border border-amber-500/30">
                         <div
                           className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-1000 ease-linear rounded-full"
                           style={{ width: `${(penaltySecondsLeft / 3) * 100}%` }}
                         />
                       </div>
-                      <p className="text-[10px] sm:text-[11px] text-center text-amber-300/90 font-medium">
-                        請趁此 3 秒掌握生字注音讀音，冷卻結束後自動推進下一題
-                      </p>
                     </div>
                   )}
 
@@ -1270,13 +1371,13 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                       {lastEvaluation.isPassed ? (
                         <span>
                           {lastEvaluation.isAllCorrect
-                            ? '🎯 100% 完美命中！直接擊墜目標！'
-                            : `💥 命中率 ${lastEvaluation.damagePercent}%（已達 70% 門檻）破壞成功！`}
+                            ? 'Perfect'
+                            : 'Good'}
                         </span>
                       ) : (
                         <>
                           <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                          <span>未造成有效傷害</span>
+                          <span>未造成有效傷害，請重新輸入</span>
                         </>
                       )}
                     </motion.div>
@@ -1287,7 +1388,6 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     {/* 70% 門檻刻度線 */}
                     <div
                       className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-amber-400/90 z-10 shadow-[0_0_4px_rgba(251,191,36,0.9)]"
-                      title="70% 擊墜門檻"
                     />
                     <div
                       className={`h-full transition-all duration-300 ${
@@ -1326,30 +1426,54 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
               >
                 {blastType === 'perfect' ? (
                   /* === 1. 完美擊破：金色 Perfect (原地擴散放大，零垂直位移) === */
-                  <motion.div
-                    initial={{ scale: 0.75 }}
-                    animate={{ scale: [0.75, 1.25, 1.15] }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className="font-black italic tracking-wider text-5xl sm:text-6xl md:text-7xl text-amber-400 font-mono drop-shadow-[0_0_35px_rgba(251,191,36,0.95)]"
-                    style={{
-                      textShadow: '0 0 25px #fbbf24, 0 0 50px #f59e0b, 0 3px 6px rgba(0,0,0,0.9)',
-                    }}
-                  >
-                    PERFECT
-                  </motion.div>
+                  <div className="flex flex-col items-center">
+                    <motion.div
+                      initial={{ scale: 0.75 }}
+                      animate={{ scale: [0.75, 1.25, 1.15] }}
+                      transition={{ duration: 0.25, ease: 'easeOut' }}
+                      className="font-black italic tracking-wider text-5xl sm:text-6xl md:text-7xl text-amber-400 font-mono drop-shadow-[0_0_35px_rgba(251,191,36,0.95)]"
+                      style={{
+                        textShadow: '0 0 25px #fbbf24, 0 0 50px #f59e0b, 0 3px 6px rgba(0,0,0,0.9)',
+                      }}
+                    >
+                      PERFECT
+                    </motion.div>
+                    {currentCombo > 1 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.08, duration: 0.2 }}
+                        className="text-amber-300 font-mono font-extrabold text-lg sm:text-2xl mt-1 tracking-widest drop-shadow-[0_0_12px_rgba(251,191,36,0.8)]"
+                      >
+                        {currentCombo} COMBO!
+                      </motion.div>
+                    )}
+                  </div>
                 ) : (
                   /* === 2. 一般擊退：綠色 Good (原地擴散放大，零垂直位移) === */
-                  <motion.div
-                    initial={{ scale: 0.75 }}
-                    animate={{ scale: [0.75, 1.2, 1.1] }}
-                    transition={{ duration: 0.22, ease: 'easeOut' }}
-                    className="font-black italic tracking-wider text-5xl sm:text-6xl md:text-7xl text-emerald-400 font-mono drop-shadow-[0_0_35px_rgba(52,211,153,0.95)]"
-                    style={{
-                      textShadow: '0 0 25px #34d399, 0 0 50px #10b981, 0 3px 6px rgba(0,0,0,0.9)',
-                    }}
-                  >
-                    GOOD
-                  </motion.div>
+                  <div className="flex flex-col items-center">
+                    <motion.div
+                      initial={{ scale: 0.75 }}
+                      animate={{ scale: [0.75, 1.2, 1.1] }}
+                      transition={{ duration: 0.22, ease: 'easeOut' }}
+                      className="font-black italic tracking-wider text-5xl sm:text-6xl md:text-7xl text-emerald-400 font-mono drop-shadow-[0_0_35px_rgba(52,211,153,0.95)]"
+                      style={{
+                        textShadow: '0 0 25px #34d399, 0 0 50px #10b981, 0 3px 6px rgba(0,0,0,0.9)',
+                      }}
+                    >
+                      GOOD
+                    </motion.div>
+                    {currentCombo > 1 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.08, duration: 0.2 }}
+                        className="text-emerald-300 font-mono font-extrabold text-lg sm:text-2xl mt-1 tracking-widest drop-shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                      >
+                        {currentCombo} COMBO!
+                      </motion.div>
+                    )}
+                  </div>
                 )}
               </motion.div>
             )}
@@ -1472,11 +1596,11 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
             {countdown !== null ? (
               <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-400" />
-                暖手測試中（倒數結束自動清空正式開局）
+                ✨ 開放暖手測試
               </span>
             ) : (
               <span className="text-[11px] text-stone-500 hidden md:inline">
-                輸入完成後按 Enter 或點擊「發射擊破」送出檢驗
+                輸入完成後按 Enter 或點擊「發射擊破」
               </span>
             )}
           </div>
@@ -1510,10 +1634,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
               onKeyDown={handleKeyDown}
               placeholder={
                 isPenaltyActive
-                  ? `⚠️ 跳過懲罰中：學習該題注音，系統凍結 ${penaltySecondsLeft} 秒...`
+                  ? `⚠️ 凍結中 (${penaltySecondsLeft}s)...`
                   : countdown !== null
-                  ? `倒數暖手測試中（${countdown}s）：可在此敲打鍵盤測試手感，開局將自動清空...`
-                  : "在此輸入空中飄浮的句子，完成後按 Enter 或「發射擊破」..."
+                  ? "趁現在找回手感"
+                  : "輸入並送出句子，便可以攻擊敵人"
               }
               autoFocus
               autoComplete="off"
@@ -1566,7 +1690,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
             ) : countdown !== null ? (
               <span className="flex items-center gap-1 text-stone-400 font-mono">
                 <Clock className="w-3.5 h-3.5" />
-                <span>暖手中 ({countdown}s)</span>
+                <span>⏳ 暖手中</span>
               </span>
             ) : (
               <>
@@ -1580,8 +1704,6 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
         {/* Auxiliary Control & Information Bar */}
         <div className="flex items-center justify-between pt-0.5 gap-2 text-xs border-t border-stone-800/60">
           <div className="flex items-center gap-1.5 text-stone-400 text-[10px] sm:text-[11px]">
-            <span className="hidden sm:inline">支援注音、倉頡、拼音等輸入法，完成後按 Enter 或點擊「發射擊破」</span>
-            <span className="sm:hidden text-stone-500">按 Enter 或「發射擊破」</span>
           </div>
 
           <div className="flex items-center gap-1.5 ml-auto">
@@ -1597,10 +1719,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                   ? 'bg-stone-900 text-stone-600 border border-stone-800 cursor-not-allowed'
                   : 'bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-amber-300'
               }`}
-              title={isPenaltyActive ? '跳過懲罰中 (凍結 3 秒)' : '跳過當前題目換下一題 (懲罰：停留 3 秒並展示注音)'}
+              title={isPenaltyActive ? '凍結中' : '跳過當前題目（懲罰3秒）'}
             >
               <SkipForward className="w-3 h-3" />
-              <span>{isPenaltyActive ? `懲罰凍結中 (${penaltySecondsLeft}s)` : '跳過此題'}</span>
+              <span>{isPenaltyActive ? '凍結中' : '跳過此題'}</span>
             </button>
           </div>
         </div>

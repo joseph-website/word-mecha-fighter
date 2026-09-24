@@ -11,6 +11,17 @@ export interface QuestionItem {
   meaning?: string;
 }
 
+export interface ReviewCharRecord {
+  id: string;
+  questionText: string;
+  char: string;
+  pinyin?: string;
+  bopomofo?: string;
+  type: 'error' | 'missing' | 'skipped';
+  userTyped?: string;
+  meaning?: string;
+}
+
 export interface GameRecord {
   id: string;
   playerName: string;
@@ -28,7 +39,11 @@ export interface GameRecord {
   maxCombo: number;
   errorRate?: number;
   netCpm?: number;
+  missingChars?: number;
+  missingRate?: number;
+  reviewItems?: ReviewCharRecord[];
 }
+
 
 export type GameStatus = 'idle' | 'playing' | 'completed';
 

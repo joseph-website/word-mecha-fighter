@@ -26,7 +26,7 @@ import {
   RoomSettings
 } from './types';
 import { getStoredQuestions, getRandomQuestions } from './data/questions';
-import { isSoundEnabled } from './utils/audio';
+import { isSoundEnabled, getVolume, setVolume, toggleSound } from './utils/audio';
 import { P2PRoomManager } from './utils/p2p';
 
 export default function App() {
@@ -40,7 +40,20 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState<GameStatus>('idle');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [questionCount, setQuestionCount] = useState<QuestionCount>(10);
-  const [soundOn, setSoundOn] = useState<boolean>(true);
+  const [soundOn, setSoundOn] = useState<boolean>(() => isSoundEnabled());
+  const [volume, setVolumeState] = useState<number>(() => getVolume());
+
+  const handleVolumeChange = (newVol: number) => {
+    const actualVol = setVolume(newVol);
+    setVolumeState(actualVol);
+    setSoundOn(actualVol > 0);
+  };
+
+  const handleToggleSound = () => {
+    const newSoundOn = toggleSound();
+    setSoundOn(newSoundOn);
+    setVolumeState(getVolume());
+  };
 
   // 題庫與當前回合題目
   const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
@@ -59,6 +72,8 @@ export default function App() {
     maxCombo: number;
     errorRate?: number;
     netCpm?: number;
+    missingChars?: number;
+    missingRate?: number;
   } | null>(null);
 
   // 多人連線專屬狀態
@@ -103,6 +118,7 @@ export default function App() {
     const loaded = getStoredQuestions();
     setQuestionBank(loaded);
     setSoundOn(isSoundEnabled());
+    setVolumeState(getVolume());
   }, []);
 
   // 綁定 P2P 全域事件回調
@@ -259,6 +275,8 @@ export default function App() {
     maxCombo: number;
     errorRate?: number;
     netCpm?: number;
+    missingChars?: number;
+    missingRate?: number;
   }) => {
     setLatestStats(stats);
     if (gameMode === 'multiplayer') {
@@ -326,7 +344,9 @@ export default function App() {
       {/* Global Navigation Header */}
       <Header
         soundOn={soundOn}
-        setSoundOn={setSoundOn}
+        volume={volume}
+        onVolumeChange={handleVolumeChange}
+        onToggleSound={handleToggleSound}
         onOpenLeaderboard={() => setShowLeaderboard(true)}
         onOpenQuestionBank={() => setShowQuestionBank(true)}
         onOpenInstructions={() => setShowInstructions(true)}
@@ -423,13 +443,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-stone-900 py-4 text-center text-xs text-stone-500">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>打字機動戰士 · 妙語如珠，例不虛發</span>
-          <span className="text-[11px] text-stone-600">
-            支援 2-6 人即時連線對決 · 電腦實體鍵盤與行動裝置打字
-          </span>
-        </div>
+      <footer className="w-full border-t border-stone-900 py-3 text-center text-xs text-stone-500">
       </footer>
 
       {/* Modals */}

@@ -1,6 +1,39 @@
 // Web Audio API Synthesizer for tactile typing feedback
 let audioCtx: AudioContext | null = null;
+let masterGainNode: GainNode | null = null;
+let soundVolume = 0.6;
+let lastNonZeroVolume = 0.6;
 let soundEnabled = true;
+
+// Load initial values from localStorage if available
+if (typeof window !== 'undefined') {
+  try {
+    const savedVol = localStorage.getItem('word_mecha_volume');
+    if (savedVol !== null) {
+      const v = parseFloat(savedVol);
+      if (!isNaN(v)) {
+        soundVolume = Math.max(0, Math.min(1, v));
+        if (soundVolume > 0) lastNonZeroVolume = soundVolume;
+      }
+    }
+    const savedEnabled = localStorage.getItem('word_mecha_sound_enabled');
+    if (savedEnabled !== null) {
+      soundEnabled = savedEnabled === 'true';
+    }
+  } catch {
+    // Ignore storage issues
+  }
+}
+
+function getMasterGain(ctx: AudioContext): GainNode {
+  if (!masterGainNode) {
+    masterGainNode = ctx.createGain();
+    const effectiveVol = soundEnabled ? soundVolume : 0;
+    masterGainNode.gain.setValueAtTime(effectiveVol, ctx.currentTime);
+    masterGainNode.connect(ctx.destination);
+  }
+  return masterGainNode;
+}
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -8,6 +41,7 @@ function getAudioContext(): AudioContext | null {
     const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioCtxClass) {
       audioCtx = new AudioCtxClass();
+      getMasterGain(audioCtx);
     }
   }
   if (audioCtx && audioCtx.state === 'suspended') {
@@ -16,12 +50,61 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+export function getVolume(): number {
+  return soundVolume;
+}
+
+export function setVolume(vol: number): number {
+  soundVolume = Math.max(0, Math.min(1, vol));
+  if (soundVolume > 0) {
+    lastNonZeroVolume = soundVolume;
+    soundEnabled = true;
+  } else {
+    soundEnabled = false;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('word_mecha_volume', String(soundVolume));
+      localStorage.setItem('word_mecha_sound_enabled', String(soundEnabled));
+    } catch {
+      // Ignore
+    }
+  }
+
+  const ctx = getAudioContext();
+  if (ctx && masterGainNode) {
+    masterGainNode.gain.setValueAtTime(soundEnabled ? soundVolume : 0, ctx.currentTime);
+  }
+
+  return soundVolume;
+}
+
 export function toggleSound(enabled?: boolean): boolean {
   if (enabled !== undefined) {
     soundEnabled = enabled;
   } else {
     soundEnabled = !soundEnabled;
   }
+
+  if (soundEnabled && soundVolume === 0) {
+    soundVolume = lastNonZeroVolume > 0 ? lastNonZeroVolume : 0.6;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('word_mecha_sound_enabled', String(soundEnabled));
+      localStorage.setItem('word_mecha_volume', String(soundVolume));
+    } catch {
+      // Ignore
+    }
+  }
+
+  const ctx = getAudioContext();
+  if (ctx && masterGainNode) {
+    masterGainNode.gain.setValueAtTime(soundEnabled ? soundVolume : 0, ctx.currentTime);
+  }
+
   return soundEnabled;
 }
 
@@ -49,7 +132,7 @@ export function playKeyStrokeSound() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start();
     osc.stop(ctx.currentTime + 0.04);
@@ -81,7 +164,7 @@ export function playCorrectSound(combo = 0) {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start();
     osc.stop(ctx.currentTime + 0.09);
@@ -110,7 +193,7 @@ export function playErrorSound() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start();
     osc.stop(ctx.currentTime + 0.1);
@@ -141,7 +224,7 @@ export function playQuestionCompleteSound() {
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
 
       osc.start(startTime);
       osc.stop(startTime + 0.22);
@@ -171,7 +254,7 @@ export function playLaserShotSound() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start();
     osc.stop(ctx.currentTime + 0.13);
@@ -207,7 +290,7 @@ export function playExplosionSound() {
 
     osc1.connect(gain);
     osc2.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc1.start();
     osc2.start();
@@ -240,7 +323,7 @@ export function playPerfectClearSound() {
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.32);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
 
       osc.start(startTime);
       osc.stop(startTime + 0.35);
@@ -272,7 +355,7 @@ export function playVictorySound() {
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
 
       osc.start(startTime);
       osc.stop(startTime + 0.45);
@@ -302,7 +385,7 @@ export function playCountdownBeep(isStart: boolean = false) {
         gain.gain.setValueAtTime(0.18, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getMasterGain(ctx));
         osc.start();
         osc.stop(ctx.currentTime + 0.38);
       });
@@ -315,7 +398,7 @@ export function playCountdownBeep(isStart: boolean = false) {
       gain.gain.setValueAtTime(0.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
       osc.start();
       osc.stop(ctx.currentTime + 0.13);
     }
@@ -341,7 +424,7 @@ export function playPenaltySound() {
     gain1.gain.setValueAtTime(0.15, ctx.currentTime);
     gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
     osc1.connect(gain1);
-    gain1.connect(ctx.destination);
+    gain1.connect(getMasterGain(ctx));
     osc1.start();
     osc1.stop(ctx.currentTime + 0.16);
 
@@ -353,10 +436,39 @@ export function playPenaltySound() {
     gain2.gain.setValueAtTime(0.18, ctx.currentTime + 0.18);
     gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.38);
     osc2.connect(gain2);
-    gain2.connect(ctx.destination);
+    gain2.connect(getMasterGain(ctx));
     osc2.start(ctx.currentTime + 0.18);
     osc2.stop(ctx.currentTime + 0.4);
   } catch {
     // ignore
   }
 }
+
+/**
+ * 連擊能量激增 / 充能音效 (5、10、15 等連擊時觸發機械充能上升音階)
+ */
+export function playComboSurgeSound(combo: number) {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const baseFreq = combo >= 10 ? 587.33 : 440; // D5 或 A4
+    const notes = [baseFreq, baseFreq * 1.25, baseFreq * 1.5]; // 大三度與完全五度充能音階
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+      gain.gain.setValueAtTime(0.14, ctx.currentTime + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.22);
+      osc.connect(gain);
+      gain.connect(getMasterGain(ctx));
+      osc.start(ctx.currentTime + idx * 0.08);
+      osc.stop(ctx.currentTime + idx * 0.08 + 0.25);
+    });
+  } catch {
+    // ignore
+  }
+}
+

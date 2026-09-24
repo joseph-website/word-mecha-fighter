@@ -227,6 +227,11 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ onClose }) =
                           >
                             {r.accuracy}%
                           </span>
+                          {r.missingRate !== undefined && (
+                            <span className="block text-[10px] text-stone-500 font-normal">
+                              {r.missingRate > 0 ? `漏 ${r.missingRate}%` : '無漏字'}
+                            </span>
+                          )}
                         </td>
 
                         {/* Time */}

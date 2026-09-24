@@ -2,10 +2,15 @@ import { GameRecord } from '../types';
 
 const LEADERBOARD_STORAGE_KEY = 'chinese_typing_leaderboard_records_v1';
 
-export function calculateGrade(cpm: number, accuracy: number): 'S+' | 'S' | 'A' | 'B' | 'C' | 'D' {
-  if (cpm >= 110 && accuracy >= 97) return 'S+';
-  if (cpm >= 85 && accuracy >= 93) return 'S';
-  if (cpm >= 60 && accuracy >= 88) return 'A';
+export function calculateGrade(
+  cpm: number,
+  accuracy: number,
+  missingRate: number = 0
+): 'S+' | 'S' | 'A' | 'B' | 'C' | 'D' {
+  // 若漏字率過高 (例如刻意省略標點跳字)，限制其最高評級，避免不勞而獲衝上 S+/S
+  if (cpm >= 110 && accuracy >= 97 && missingRate <= 2) return 'S+';
+  if (cpm >= 85 && accuracy >= 93 && missingRate <= 5) return 'S';
+  if (cpm >= 60 && accuracy >= 88 && missingRate <= 10) return 'A';
   if (cpm >= 40 && accuracy >= 80) return 'B';
   if (cpm >= 20 && accuracy >= 70) return 'C';
   return 'D';
