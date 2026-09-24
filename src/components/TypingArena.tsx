@@ -599,14 +599,14 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       }
     }
 
-    // 增加連擊：100% 完美擊破連擊 +1；70%~99% 命中過關延續連擊
-    const newCombo = isAllCorrect ? currentCombo + 1 : Math.max(1, currentCombo);
+    // 增加連擊：100% 完美擊破連擊 +1；70%~99% 一般重創 (Good) 連擊中斷停滯「但不清空」（維持目前數字）；未達 70% 無效攻擊歸零
+    const newCombo = isAllCorrect ? currentCombo + 1 : currentCombo;
     setCurrentCombo(newCombo);
     if (newCombo > maxCombo) {
       setMaxCombo(newCombo);
     }
-    // 連擊音效：達成連續擊破時播放階梯式充能音效
-    if (newCombo > 1) {
+    // 連擊音效：達成連續擊破時播放階梯式充能音效（僅在 100% 完美連擊且累積增長時播放）
+    if (isAllCorrect && newCombo > 1) {
       playComboSurgeSound(newCombo);
     }
 
@@ -699,8 +699,11 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       }
       setTimeout(() => {
         onNextQuestion();
-        setIsBlasting(false);
-        setBlastType(null);
+        // 延後 60ms 確保 React 將新題目 DOM 完全就緒後才解除爆破遮罩，徹底消除前題殘影
+        setTimeout(() => {
+          setIsBlasting(false);
+          setBlastType(null);
+        }, 60);
       }, isAllCorrect ? 550 : 450);
     }
   };
@@ -1450,7 +1453,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     )}
                   </div>
                 ) : (
-                  /* === 2. 一般擊退：綠色 Good (原地擴散放大，零垂直位移) === */
+                  /* === 2. 一般擊退：綠色 Good (原地擴散放大，零垂直位移，不顯示 COMBO) === */
                   <div className="flex flex-col items-center">
                     <motion.div
                       initial={{ scale: 0.75 }}
@@ -1463,16 +1466,6 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     >
                       GOOD
                     </motion.div>
-                    {currentCombo > 1 && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.08, duration: 0.2 }}
-                        className="text-emerald-300 font-mono font-extrabold text-lg sm:text-2xl mt-1 tracking-widest drop-shadow-[0_0_12px_rgba(52,211,153,0.8)]"
-                      >
-                        {currentCombo} COMBO!
-                      </motion.div>
-                    )}
                   </div>
                 )}
               </motion.div>
