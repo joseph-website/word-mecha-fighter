@@ -32,12 +32,13 @@ import {
   playComboSurgeSound
 } from '../utils/audio';
 import { getSentenceZhuyin } from '../utils/zhuyin';
+import { formatLyricsMeaning } from '../data/questions';
 
 interface TypingArenaProps {
   questions: QuestionItem[];
   questionIndex: number;
   onNextQuestion: () => void;
-  onSkipQuestion?: () => void;
+  onSkipQuestion?: () => { supplemented: boolean; remainingCount?: number } | void;
   onFinishChallenge: (stats: {
     totalChars: number;
     correctChars: number;
@@ -52,6 +53,11 @@ interface TypingArenaProps {
     missingChars?: number;
     missingRate?: number;
     reviewItems?: ReviewCharRecord[];
+    destroyedCount?: number;
+    perfectCount?: number;
+    goodCount?: number;
+    skippedCount?: number;
+    totalQuestionsCount?: number;
   }) => void;
   onQuit: () => void;
   isMultiplayer?: boolean;
@@ -178,6 +184,12 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const [currentCombo, setCurrentCombo] = useState<number>(0);
   const [maxCombo, setMaxCombo] = useState<number>(0);
 
+  // 擊破數與跳過數精確統計
+  const destroyedCountRef = useRef<number>(0);
+  const perfectCountRef = useRef<number>(0);
+  const goodCountRef = useRef<number>(0);
+  const skippedCountRef = useRef<number>(0);
+
   // 開局 5 秒中央倒數狀態: 5, 4, 3, 2, 1, 'start', null
   const [countdown, setCountdown] = useState<number | 'start' | null>(5);
 
@@ -243,6 +255,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   // 跳過題目懲罰狀態 (停留 3 秒並展示標準注音)
   const [isPenaltyActive, setIsPenaltyActive] = useState<boolean>(false);
   const [penaltySecondsLeft, setPenaltySecondsLeft] = useState<number>(3);
+  const [skipNotice, setSkipNotice] = useState<string | null>(null);
   const penaltyTimerRef = useRef<number | null>(null);
 
   const clearPenaltyTimer = () => {
@@ -263,6 +276,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     clearPenaltyTimer();
     setIsPenaltyActive(false);
     setPenaltySecondsLeft(3);
+    setSkipNotice(null);
     setTypedInput('');
     setComposingBuffer('');
     setIsComposing(false);
@@ -289,8 +303,18 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const handleTriggerSkip = () => {
     if (isPenaltyActive || countdown !== null || isBlasting) return;
 
-    // 觸發隊尾補題：從未抽取題庫中補充一道同難度（或跨難度）題目到隊尾
-    onSkipQuestion?.();
+    skippedCountRef.current += 1;
+
+    // 觸發隊尾補題：從未抽取題庫中補充一道同難度題目到隊尾（若題庫已無新題則不重複補充）
+    const skipResult = onSkipQuestion?.();
+
+    // 若還有題目便不顯示說明，若已無題目，則顯示說明文字：「⚠️ 題庫已耗盡，將進行結算 ⚠️」
+    const hasRemainingQuestions = Boolean(skipResult?.supplemented) || (questionIndex + 1 < questions.length);
+    if (hasRemainingQuestions) {
+      setSkipNotice(null);
+    } else {
+      setSkipNotice('⚠️ 題庫已耗盡，將進行結算 ⚠️');
+    }
 
     const currentTargetLen = targetText.trim().length || 1;
 
@@ -365,6 +389,11 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
               maxCombo: maxCombo,
               errorRate: finalErrorRate,
               netCpm: netCPM,
+              destroyedCount: destroyedCountRef.current,
+              perfectCount: perfectCountRef.current,
+              goodCount: goodCountRef.current,
+              skippedCount: skippedCountRef.current,
+              totalQuestionsCount: currentTotal,
             });
           }, 300);
         } else {
@@ -567,6 +596,13 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     damagePercent: number,
     isAllCorrect: boolean
   ) => {
+    destroyedCountRef.current += 1;
+    if (isAllCorrect) {
+      perfectCountRef.current += 1;
+    } else {
+      goodCountRef.current += 1;
+    }
+
     setIsBlasting(true);
     setBlastType(isAllCorrect ? 'perfect' : 'normal');
     setBlastDamage(damagePercent);
@@ -673,6 +709,11 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           netCpm: netCPM,
           missingChars: updatedTotalMissing,
           missingRate: finalMissingRate,
+          destroyedCount: destroyedCountRef.current,
+          perfectCount: perfectCountRef.current,
+          goodCount: goodCountRef.current,
+          skippedCount: skippedCountRef.current,
+          totalQuestionsCount: currentTotal,
         });
       }, isAllCorrect ? 750 : 550);
     } else {
@@ -710,7 +751,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
   // 檢查目前輸入是否擊破（按 Enter 或點擊「發射擊破」才觸發）
   const checkSubmission = (currentText: string) => {
-    if (isPenaltyActive || countdown !== null) {
+    if (isPenaltyActive || countdown !== null || isBlasting) {
       return;
     }
 
@@ -1230,7 +1271,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
                     </span>
                     {currentQuestion.meaning && (
                       <span className="text-[11px] sm:text-xs text-amber-200/90 font-sans tracking-wide">
-                        {currentQuestion.meaning}
+                        {formatLyricsMeaning(currentQuestion.meaning, currentQuestion.category)}
                       </span>
                     )}
                   </div>
@@ -1258,14 +1299,21 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
                   {/* 跳過懲罰狀態標頭提示 */}
                   {isPenaltyActive && (
-                    <div className="w-full flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-amber-500/30">
-                      <span className="text-[11px] sm:text-xs font-bold text-amber-400 flex items-center gap-1.5 animate-pulse">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span>暫停3秒</span>
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold text-xs border border-amber-500/40 shrink-0">
-                        {penaltySecondsLeft}s
-                      </span>
+                    <div className="w-full flex flex-col gap-1 mb-2 pb-1.5 border-b border-amber-500/30">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] sm:text-xs font-bold text-amber-400 flex items-center gap-1.5 animate-pulse">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>暫停 3 秒觀看正確讀音</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold text-xs border border-amber-500/40 shrink-0">
+                          {penaltySecondsLeft}s
+                        </span>
+                      </div>
+                      {skipNotice && (
+                        <div className="text-[10px] sm:text-xs text-amber-300/90 font-medium py-1 px-2.5 bg-stone-950/80 rounded-lg border border-amber-500/30 text-center">
+                          {skipNotice}
+                        </div>
+                      )}
                     </div>
                   )}
 

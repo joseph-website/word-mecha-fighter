@@ -73,6 +73,11 @@ export const MultiplayerResultModal: React.FC<MultiplayerResultModalProps> = ({
               : settings.difficulty === 'hard'
               ? '高級長句'
               : '綜合模式'}
+            {settings.selectedCategories && settings.selectedCategories.length > 0 && (
+              <span className="text-amber-400 ml-1.5">
+                ({settings.selectedCategories.join('、')})
+              </span>
+            )}
           </p>
         </div>
 

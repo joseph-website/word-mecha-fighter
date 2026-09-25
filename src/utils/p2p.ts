@@ -70,7 +70,7 @@ export class P2PRoomManager {
   // === 房主開房 (Host) ===
   public createRoom(
     hostName: string,
-    initialSettings: { maxPlayers: number; difficulty: any; questionCount: any },
+    initialSettings: { maxPlayers: number; difficulty: any; questionCount: any; selectedCategories?: string[] },
     specifiedCode?: string
   ): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -88,6 +88,7 @@ export class P2PRoomManager {
         maxPlayers: Math.min(Math.max(initialSettings.maxPlayers, 2), 6),
         difficulty: initialSettings.difficulty,
         questionCount: initialSettings.questionCount,
+        selectedCategories: initialSettings.selectedCategories,
         status: 'waiting',
       };
 

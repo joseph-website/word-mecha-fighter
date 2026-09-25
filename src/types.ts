@@ -73,6 +73,7 @@ export interface RoomSettings {
   maxPlayers: number; // 2 ~ 6 人
   difficulty: Difficulty;
   questionCount: QuestionCount;
+  selectedCategories?: string[]; // 可選指定題庫分類
   status: 'waiting' | 'starting' | 'in_game' | 'finished';
 }
 

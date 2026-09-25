@@ -1,9 +1,62 @@
 import { QuestionItem, Difficulty, QuestionCount } from '../types';
 import defaultQuestionsData from './defaultQuestions.json';
 
-const CUSTOM_QUESTIONS_KEY = 'chinese_typing_custom_questions_v23';
+const CUSTOM_QUESTIONS_KEY = 'chinese_typing_custom_questions_v28';
 
 export const defaultQuestions: QuestionItem[] = defaultQuestionsData as QuestionItem[];
+
+// 規範化舊分類名稱至最新分類
+export function normalizeCategory(category: string | undefined): string {
+  if (!category) return '自訂題庫';
+  const trimmed = category.trim();
+  if (trimmed === '漫畫名言' || trimmed === '名人名言' || trimmed === '名言與金句') return '名言佳句';
+  if (trimmed === '夜市與小吃') return '台灣小吃';
+  return trimmed;
+}
+
+/**
+ * 針對引用類題目（歌詞、名言佳句、台灣文學、詩詞古文等），說明欄統一精簡為「作者《作品》」格式
+ */
+export function formatCitationMeaning(meaning: string | undefined, category?: string): string {
+  if (!meaning) return '';
+  const cat = category ? normalizeCategory(category) : '';
+  const isCitationCat =
+    cat.includes('歌詞') ||
+    cat.includes('文學') ||
+    cat.includes('詩詞') ||
+    cat.includes('古文') ||
+    cat.includes('名言') ||
+    cat.includes('金句') ||
+    cat === '名言佳句' ||
+    cat === '經典歌詞' ||
+    cat === '台灣文學' ||
+    cat === '詩詞與古文';
+
+  // 1. 若符合 "作者《作品》" 格式（後方可能帶有雜訊說明），僅保留作者與書名號作品名
+  const matchWithBrackets = meaning.match(/^([^《]*?《[^》]+》)/);
+  if (matchWithBrackets) {
+    return matchWithBrackets[1].trim();
+  }
+
+  // 2. 若為引用類且符合 "作者 - 作品" 或 "作者 / 作品" 格式
+  if (isCitationCat) {
+    const matchWithDash = meaning.match(/^([^-–—/]+)\s*[-–—/]\s*([^-–—/]+)/);
+    if (matchWithDash) {
+      return `${matchWithDash[1].trim()}《${matchWithDash[2].trim()}》`;
+    }
+  }
+
+  return meaning.trim();
+}
+
+// 相容別名
+export const formatLyricsMeaning = formatCitationMeaning;
+
+// 建立預設題目 id -> QuestionItem 對照表，確保預設題目的最新原文、讀音與註解即時同步
+const defaultQuestionMap = new Map<string, QuestionItem>();
+defaultQuestions.forEach((q) => {
+  defaultQuestionMap.set(q.id, q);
+});
 
 export function getStoredQuestions(): QuestionItem[] {
   try {
@@ -11,7 +64,23 @@ export function getStoredQuestions(): QuestionItem[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((q: QuestionItem) => {
+          if (q.id && defaultQuestionMap.has(q.id)) {
+            const def = defaultQuestionMap.get(q.id)!;
+            return {
+              ...q,
+              text: def.text,
+              bopomofo: def.bopomofo,
+              category: def.category,
+              meaning: def.meaning,
+            };
+          }
+          return {
+            ...q,
+            category: normalizeCategory(q.category),
+            meaning: formatCitationMeaning(q.meaning, q.category),
+          };
+        });
       }
     }
   } catch (e) {
@@ -21,7 +90,11 @@ export function getStoredQuestions(): QuestionItem[] {
 }
 
 export function saveStoredQuestions(questions: QuestionItem[]): void {
-  localStorage.setItem(CUSTOM_QUESTIONS_KEY, JSON.stringify(questions, null, 2));
+  const normalized = questions.map((q) => ({
+    ...q,
+    category: normalizeCategory(q.category),
+  }));
+  localStorage.setItem(CUSTOM_QUESTIONS_KEY, JSON.stringify(normalized, null, 2));
 }
 
 export function resetToDefaultQuestions(): QuestionItem[] {
@@ -30,26 +103,59 @@ export function resetToDefaultQuestions(): QuestionItem[] {
 }
 
 /**
- * 隨機抽取指定難度與數量的題目
+ * 隨機抽取指定難度、分類與數量的題目
+ * 確保嚴格遵守玩家指定分類，每道題目在該局遊戲中至多只出現一次（絕不重複循環灌水相同句子）
  */
 export function getRandomQuestions(
   pool: QuestionItem[],
   difficulty: Difficulty,
-  count: QuestionCount
+  count: QuestionCount,
+  selectedCategories?: string[]
 ): QuestionItem[] {
   const effectivePool = pool && pool.length > 0 ? pool : defaultQuestions;
   let filtered = effectivePool;
-  if (difficulty !== 'all') {
-    filtered = effectivePool.filter((q) => q.difficulty === difficulty);
+
+  // 1. 先篩選分類（若有指定一個或多個分類）
+  if (selectedCategories && selectedCategories.length > 0) {
+    const catSet = new Set(selectedCategories);
+    const catFiltered = effectivePool.filter((q) => catSet.has(q.category));
+    if (catFiltered.length > 0) {
+      filtered = catFiltered;
+    }
   }
 
-  // 若該難度題庫不足，自動補入其他題目避免崩潰
-  if (filtered.length < count) {
+  // 2. 篩選難度
+  if (difficulty !== 'all') {
+    const diffFiltered = filtered.filter((q) => q.difficulty === difficulty);
+    // 若該分類下指定難度題庫有題目則使用，否則保留該分類其他題目
+    if (diffFiltered.length > 0) {
+      filtered = diffFiltered;
+    }
+  }
+
+  if (filtered.length === 0) {
     filtered = [...effectivePool];
   }
 
-  // 洗牌演算法 (Fisher-Yates)
-  const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+  // 3. 依題目文字去重，確保不包含重複內容
+  const uniqueMap = new Map<string, QuestionItem>();
+  for (const q of filtered) {
+    const key = q.text.trim();
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, q);
+    }
+  }
+  const uniqueList = Array.from(uniqueMap.values());
+
+  // 4. 洗牌演算法 (Fisher-Yates)
+  const shuffled = [...uniqueList].sort(() => Math.random() - 0.5);
+
+  // 嚴格不重複原則：若符合條件題目數少於設定題數（例如自訂題庫或指定範圍僅 3 題但設定 10 題），
+  // 絕不重複循環灌水，直接以該分類現有的全部不重複題目進行挑戰！
+  if (shuffled.length <= count) {
+    return shuffled;
+  }
+
   return shuffled.slice(0, count);
 }
 
@@ -174,9 +280,9 @@ export function parseCsvToQuestions(csvString: string): { valid: boolean; error?
     items.push({
       id: `csv-${Date.now()}-${i}`,
       text: textVal.trim(),
-      category: catVal.trim(),
+      category: normalizeCategory(catVal.trim()),
       difficulty: diffVal,
-      meaning: meaningVal.trim(),
+      meaning: formatLyricsMeaning(meaningVal.trim(), catVal.trim()),
     });
   }
 
@@ -196,7 +302,7 @@ export function exportQuestionsToCsv(questions: QuestionItem[]): string {
   const rows = questions.map((q) =>
     [
       escapeCsv(q.text),
-      escapeCsv(q.category || '自訂題庫'),
+      escapeCsv(normalizeCategory(q.category || '自訂題庫')),
       escapeCsv(q.difficulty || 'easy'),
       escapeCsv(q.meaning || ''),
     ].join(',')
@@ -212,12 +318,12 @@ export function getExcelTemplateCsv(): string {
   const escapeCsv = (val: string) => `"${(val || '').replace(/"/g, '""')}"`;
   const header = ['題目文字', '分類', '難易度', '註解說明'].map(escapeCsv).join(',');
   const sampleRows = [
-    [escapeCsv('天青色等煙雨，而我在等你。'), escapeCsv('經典歌詞'), escapeCsv('medium'), escapeCsv('周杰倫《青花瓷》方文山作詞名句')],
-    [escapeCsv('現在放棄的話，比賽就結束了。'), escapeCsv('漫畫名言'), escapeCsv('medium'), escapeCsv('《灌籃高手》安西教練激勵人心的經典台詞')],
-    [escapeCsv('求知若飢，虛心若愚。'), escapeCsv('名人名言'), escapeCsv('easy'), escapeCsv('賈伯斯 Steve Jobs 畢業演說格言')],
-    [escapeCsv('我知道我的未來不是夢，我認真地過每一分鐘。'), escapeCsv('經典歌詞'), escapeCsv('medium'), escapeCsv('張雨生經典勵志名曲')],
+    [escapeCsv('天青色等煙雨，而我在等你'), escapeCsv('經典歌詞'), escapeCsv('medium'), escapeCsv('周杰倫《青花瓷》')],
+    [escapeCsv('現在放棄的話，比賽就結束了。'), escapeCsv('名言佳句'), escapeCsv('medium'), escapeCsv('井上雄彥《灌籃高手：安西教練（安西光義）》')],
+    [escapeCsv('求知若飢，虛心若愚。'), escapeCsv('名言佳句'), escapeCsv('easy'), escapeCsv('史蒂夫·賈伯斯《史丹佛大學畢業演講》')],
+    [escapeCsv('珍珠奶茶微糖少冰'), escapeCsv('台灣小吃'), escapeCsv('easy'), escapeCsv('台灣手搖飲經典必點客製甜度冰塊')],
     [escapeCsv('海闊天空'), escapeCsv('經典成語'), escapeCsv('easy'), escapeCsv('天地無比廣闊，比喻心胸開朗開闊')],
-    [escapeCsv('玉山日出迎曙光'), escapeCsv('台灣風物'), escapeCsv('medium'), escapeCsv('台灣最高峰清晨破曉的壯麗景致')],
+    [escapeCsv('玉山日出迎曙光'), escapeCsv('台灣文學'), escapeCsv('medium'), escapeCsv('台灣最高峰清晨破曉的壯麗景致')],
   ].map((r) => r.join(','));
   return '\uFEFF' + [header, ...sampleRows].join('\r\n');
 }

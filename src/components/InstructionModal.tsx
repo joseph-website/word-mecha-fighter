@@ -433,7 +433,7 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span><strong>即時管理與檢視</strong>：支援單題新增、修改、刪除、分類過濾（如獨立篩選「台灣文學」、「夜市與小吃」）與即時文字搜尋。</span>
+                    <span><strong>即時管理與檢視</strong>：支援單題新增、修改、刪除、分類過濾（如獨立篩選「台灣小吃」、「名言佳句」）與即時文字搜尋。</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />

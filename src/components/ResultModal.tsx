@@ -39,9 +39,17 @@ interface ResultModalProps {
     netCpm?: number;
     missingChars?: number;
     missingRate?: number;
+    destroyedCount?: number;
+    perfectCount?: number;
+    goodCount?: number;
+    skippedCount?: number;
+    totalQuestionsCount?: number;
   };
   difficulty: string;
   questionCount: number;
+  destroyedCount?: number;
+  totalQuestionsCount?: number;
+  selectedCategories?: string[];
   onPlayAgain: () => void;
   onGoHome: () => void;
   onViewLeaderboard: () => void;
@@ -51,6 +59,9 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   stats,
   difficulty,
   questionCount,
+  destroyedCount,
+  totalQuestionsCount,
+  selectedCategories,
   onPlayAgain,
   onGoHome,
   onViewLeaderboard,
@@ -142,8 +153,22 @@ export const ResultModal: React.FC<ResultModalProps> = ({
     setShareFeedback('成績已成功存入個人成績紀錄！');
   };
 
+  const actualDestroyedCount =
+    destroyedCount !== undefined
+      ? destroyedCount
+      : stats.destroyedCount !== undefined
+      ? stats.destroyedCount
+      : questionCount;
+
+  const totalQuestions =
+    totalQuestionsCount !== undefined
+      ? totalQuestionsCount
+      : stats.totalQuestionsCount !== undefined
+      ? stats.totalQuestionsCount
+      : questionCount;
+
   // 格式化分享文案
-  const shareText = `🚀 我在「打字機動戰士」成功擊破了 ${questionCount} 艘空中飄浮【${difficultyLabel}】！
+  const shareText = `🚀 我在「打字機動戰士」成功擊破了 ${actualDestroyedCount} 艘空中飄浮【${difficultyLabel}】！
 ⚡ 擊破速度：${stats.cpm} 字/分 (Net CPM)
 🎯 命中準確率：${stats.accuracy}% (錯字率：${errorRate}% / 漏字率：${missingRate}%)
 💥 擊破字數：${stats.correctChars} / ${stats.totalChars} 字${missingChars > 0 ? ` (漏打 ${missingChars} 字)` : ' (零漏字)'}
@@ -197,10 +222,19 @@ export const ResultModal: React.FC<ResultModalProps> = ({
             {grade}
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-stone-100">
-            空域目標全數擊破！
+            {totalQuestions > 0 && actualDestroyedCount >= totalQuestions
+              ? '空域目標全數擊破！'
+              : actualDestroyedCount > 0
+              ? '空域防衛作戰完成！'
+              : '空域防衛作戰結束！'}
           </h2>
           <p className="text-xs sm:text-sm text-stone-400">
-            成功防禦並擊破 {questionCount} 題【{difficultyLabel}】空中飄浮詞句
+            成功防禦並擊破 {actualDestroyedCount} 題【{difficultyLabel}】空中飄浮詞句
+            {selectedCategories && selectedCategories.length > 0 && (
+              <span className="text-amber-400 block sm:inline sm:ml-1.5">
+                · 題庫：{selectedCategories.join('、')}
+              </span>
+            )}
           </p>
         </div>
 

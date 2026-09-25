@@ -1,5 +1,5 @@
-import React from 'react';
-import { Play, Zap, Award, Target, Flame, Compass, ShieldCheck, Users, Crown } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Play, Zap, Award, Target, Flame, Compass, ShieldCheck, Users, Crown, Layers, CheckSquare, Square, Filter } from 'lucide-react';
 import { Difficulty, QuestionCount, QuestionItem } from '../types';
 
 interface GameSetupProps {
@@ -7,6 +7,8 @@ interface GameSetupProps {
   setDifficulty: (d: Difficulty) => void;
   questionCount: QuestionCount;
   setQuestionCount: (c: QuestionCount) => void;
+  selectedCategories: string[];
+  setSelectedCategories: React.Dispatch<React.SetStateAction<string[]>>;
   onStartGame: () => void;
   questionBank: QuestionItem[];
   onSwitchToMultiplayer: () => void;
@@ -17,15 +19,56 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   setDifficulty,
   questionCount,
   setQuestionCount,
+  selectedCategories,
+  setSelectedCategories,
   onStartGame,
   questionBank,
   onSwitchToMultiplayer,
 }) => {
-  // 統計目前題庫中各難度的題目數
-  const easyCount = questionBank.filter((q) => q.difficulty === 'easy').length;
-  const mediumCount = questionBank.filter((q) => q.difficulty === 'medium').length;
-  const hardCount = questionBank.filter((q) => q.difficulty === 'hard').length;
-  const totalCount = questionBank.length;
+  // 提取所有獨立題庫分類與各分類題數
+  const categoryStats = useMemo(() => {
+    const statsMap: Record<string, number> = {};
+    questionBank.forEach((q) => {
+      const cat = q.category || '未分類';
+      statsMap[cat] = (statsMap[cat] || 0) + 1;
+    });
+    return Object.entries(statsMap).map(([name, count]) => ({
+      name,
+      count,
+    })).sort((a, b) => b.count - a.count);
+  }, [questionBank]);
+
+  // 切換指定單一題庫分類選取或反選
+  const handleToggleCategory = (categoryName: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryName)) {
+        return prev.filter((c) => c !== categoryName);
+      } else {
+        return [...prev, categoryName];
+      }
+    });
+  };
+
+  // 全選或清空全部題庫分類
+  const handleSelectAllCategories = () => {
+    setSelectedCategories([]);
+  };
+
+  // 目前已選分類的過濾池（空陣列表示全部題庫）
+  const categoryPool = useMemo(() => {
+    if (selectedCategories.length === 0) return questionBank;
+    return questionBank.filter((q) => selectedCategories.includes(q.category));
+  }, [questionBank, selectedCategories]);
+
+  // 統計在當前題庫分類範圍下，各難度的題目數
+  const easyCount = categoryPool.filter((q) => q.difficulty === 'easy').length;
+  const mediumCount = categoryPool.filter((q) => q.difficulty === 'medium').length;
+  const hardCount = categoryPool.filter((q) => q.difficulty === 'hard').length;
+  const totalCount = categoryPool.length;
+  const matchingDifficultyCount =
+    difficulty === 'all'
+      ? totalCount
+      : categoryPool.filter((q) => q.difficulty === difficulty).length;
 
   const difficultyOptions: {
     id: Difficulty;
@@ -67,7 +110,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       id: 'all',
       title: '綜合模式',
       sub: '全隨機抽題',
-      desc: '自 300 題題庫（流行用語、名人、成語、詩詞、科技）隨機抽取，全能考驗',
+      desc: '自所選題庫中隨機抽取，不限長短與難度，全能考驗',
       count: totalCount,
       color: 'border-purple-500/40 text-purple-400 bg-purple-950/20 hover:border-purple-500',
       tag: '多元豐富',
@@ -116,15 +159,95 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       </div>
 
       {/* Main Settings Card */}
-      <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl shadow-stone-950/50 space-y-2.5 sm:space-y-4">
-        {/* Step 1: Select Question Count */}
-        <div className="space-y-1 sm:space-y-1.5">
+      <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl shadow-stone-950/50 space-y-3 sm:space-y-4">
+        {/* Step 1: Select Question Bank / Category (指定題庫) */}
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between flex-wrap gap-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">1</span>
+              <h2 className="text-xs sm:text-sm font-bold text-stone-200 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-amber-400" />
+                指定題庫類別
+              </h2>
+              <span className="text-[10px] text-stone-400 hidden xs:inline">（可複選一個或多個題庫）</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] sm:text-xs font-mono text-amber-300/90">
+                {selectedCategories.length === 0
+                  ? `全部題庫 (${totalCount} 題)`
+                  : `已選 ${selectedCategories.length} 個分類 (${totalCount} 題)`}
+              </span>
+              {selectedCategories.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleSelectAllCategories}
+                  className="text-[10px] px-2 py-0.5 rounded-md bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
+                >
+                  重設為全部
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 題庫分類標籤選擇器 (支援單選/多選/全選) */}
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <button
+              type="button"
+              id="btn-category-all"
+              onClick={handleSelectAllCategories}
+              className={`px-2.5 py-1.5 rounded-lg sm:rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                selectedCategories.length === 0
+                  ? 'bg-amber-500 text-stone-950 font-bold shadow-sm shadow-amber-500/20'
+                  : 'bg-stone-950/60 border border-stone-800 text-stone-400 hover:text-stone-200 hover:border-stone-700'
+              }`}
+            >
+              <span>🌐 全部題庫</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                selectedCategories.length === 0 ? 'bg-stone-950/20 text-stone-950 font-bold' : 'bg-stone-800 text-stone-400'
+              }`}>
+                {questionBank.length}
+              </span>
+            </button>
+
+            {categoryStats.map((cat) => {
+              const isSelected = selectedCategories.includes(cat.name);
+              return (
+                <button
+                  key={cat.name}
+                  type="button"
+                  id={`btn-category-${encodeURIComponent(cat.name)}`}
+                  onClick={() => handleToggleCategory(cat.name)}
+                  className={`px-2.5 py-1.5 rounded-lg sm:rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 border border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-sm'
+                      : 'bg-stone-950/60 border border-stone-800 text-stone-300 hover:border-stone-700 hover:bg-stone-900/60'
+                  }`}
+                >
+                  <span className="truncate max-w-[120px] sm:max-w-none">{cat.name}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      isSelected
+                        ? 'bg-amber-500/30 text-amber-200 font-bold'
+                        : 'bg-stone-800 text-stone-400'
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Step 2: Select Question Count */}
+        <div className="space-y-1 sm:space-y-1.5 pt-1">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-stone-200 flex items-center gap-1.5">
-              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">1</span>
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">2</span>
               選擇挑戰題數
             </h2>
-            <span className="text-[10px] sm:text-xs text-stone-400">自題庫隨機抽取</span>
+            <span className="text-[10px] sm:text-xs text-stone-400">自所選題庫隨機抽取</span>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -154,14 +277,14 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           </div>
         </div>
 
-        {/* Step 2: Select Difficulty */}
-        <div className="space-y-1 sm:space-y-1.5">
+        {/* Step 3: Select Difficulty */}
+        <div className="space-y-1 sm:space-y-1.5 pt-1">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-stone-200 flex items-center gap-1.5">
-              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">2</span>
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs flex items-center justify-center font-mono">3</span>
               選擇難度等級
             </h2>
-            <span className="text-[10px] sm:text-xs text-stone-400">共 {totalCount} 篇題庫</span>
+            <span className="text-[10px] sm:text-xs text-stone-400">當前題庫共 {totalCount} 題</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -197,10 +320,18 @@ export const GameSetup: React.FC<GameSetupProps> = ({
         </div>
 
         {/* Start Game Action */}
-        <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-stone-800/60">
           <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-stone-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>自動計算 CPM、準確率並保存個人排行榜</span>
+            <span>
+              {selectedCategories.length > 0 ? (
+                <>
+                  已鎖定：<span className="text-amber-300 font-medium">{selectedCategories.join('、')}</span>
+                </>
+              ) : (
+                '涵蓋所有題庫分類 · 自動計算 CPM、準確率並保存紀錄'
+              )}
+            </span>
           </div>
 
           <button
@@ -209,7 +340,11 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             className="w-full sm:w-auto px-5 sm:px-7 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 active:scale-98 transition-all cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>開始 {questionCount} 題挑戰</span>
+            <span>
+              {matchingDifficultyCount > 0 && matchingDifficultyCount < questionCount
+                ? `開始挑戰 (現有 ${matchingDifficultyCount} 題)`
+                : `開始 ${questionCount} 題挑戰`}
+            </span>
           </button>
         </div>
       </div>

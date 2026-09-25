@@ -40,6 +40,7 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState<GameStatus>('idle');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [questionCount, setQuestionCount] = useState<QuestionCount>(10);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [soundOn, setSoundOn] = useState<boolean>(() => isSoundEnabled());
   const [volume, setVolumeState] = useState<number>(() => getVolume());
 
@@ -74,6 +75,11 @@ export default function App() {
     netCpm?: number;
     missingChars?: number;
     missingRate?: number;
+    destroyedCount?: number;
+    perfectCount?: number;
+    goodCount?: number;
+    skippedCount?: number;
+    totalQuestionsCount?: number;
   } | null>(null);
 
   // 多人連線專屬狀態
@@ -164,12 +170,17 @@ export default function App() {
 
   // === 單人模式開始 ===
   const handleStartSoloGame = () => {
+    // 依指定題庫分類先進行過濾（若有勾選指定題庫）
+    const categoryPool = selectedCategories.length > 0
+      ? questionBank.filter((q) => selectedCategories.includes(q.category))
+      : questionBank;
+
     const available = difficulty === 'all'
-      ? questionBank.length
-      : questionBank.filter((q) => q.difficulty === difficulty).length;
+      ? categoryPool.length
+      : categoryPool.filter((q) => q.difficulty === difficulty).length;
 
     // 當前題庫數量不足玩家選擇的題目數量時跳出警告
-    if (available < questionCount || questionBank.length < questionCount) {
+    if (available < questionCount || categoryPool.length < questionCount) {
       setInsufficientPrompt({
         isOpen: true,
         requiredCount: questionCount,
@@ -185,7 +196,7 @@ export default function App() {
   };
 
   const executeStartSoloGame = () => {
-    const selected = getRandomQuestions(questionBank, difficulty, questionCount);
+    const selected = getRandomQuestions(questionBank, difficulty, questionCount, selectedCategories);
     setActiveQuestions(selected);
     setCurrentQuestionIndex(0);
     setLatestStats(null);
@@ -195,12 +206,17 @@ export default function App() {
   // === 多人模式：房主發起戰鬥 ===
   const handleStartMultiplayerBattle = () => {
     if (!p2pManager.isHost) return;
+    const roomCats = roomSettings.selectedCategories || [];
+    const categoryPool = roomCats.length > 0
+      ? questionBank.filter((q) => roomCats.includes(q.category))
+      : questionBank;
+
     const available = roomSettings.difficulty === 'all'
-      ? questionBank.length
-      : questionBank.filter((q) => q.difficulty === roomSettings.difficulty).length;
+      ? categoryPool.length
+      : categoryPool.filter((q) => q.difficulty === roomSettings.difficulty).length;
 
     // 當前題庫數量不足房主選擇的題目數量時跳出警告
-    if (available < roomSettings.questionCount || questionBank.length < roomSettings.questionCount) {
+    if (available < roomSettings.questionCount || categoryPool.length < roomSettings.questionCount) {
       setInsufficientPrompt({
         isOpen: true,
         requiredCount: roomSettings.questionCount,
@@ -219,7 +235,8 @@ export default function App() {
     const selected = getRandomQuestions(
       questionBank,
       roomSettings.difficulty,
-      roomSettings.questionCount
+      roomSettings.questionCount,
+      roomSettings.selectedCategories
     );
     p2pManager.startGame(selected);
   };
@@ -234,33 +251,59 @@ export default function App() {
     }
   };
 
-  // 跳過題目處理：靜默從未抽到的題目中補充同難度（或跨難度未出過之新題）至隊尾，確保達成目標答對題數
-  const handleSkipQuestion = () => {
+  // 跳過題目處理：優先從符合指定分類與難度之未出題庫中補充全新題目，確保達成目標答對題數且絕不重複出現
+  const handleSkipQuestion = (): { supplemented: boolean; remainingCount?: number } => {
+    // 收集目前遊戲中所有出現過的題目文字與原始ID（去除 -skip- 與 -dup- 後綴）
+    const activeTexts = new Set(activeQuestions.map((q) => q.text.trim()));
+    const activeBaseIds = new Set(
+      activeQuestions.map((q) => q.id.replace(/-skip-.*$/, '').replace(/-dup-.*$/, ''))
+    );
+    const activeCats = gameMode === 'multiplayer'
+      ? (roomSettings.selectedCategories || [])
+      : selectedCategories;
+
+    // 1. 優先在指定分類池中篩選未出過的題目（依題目文字與原始ID雙重排除，確保絕不重複）
+    const effectiveBank = activeCats.length > 0
+      ? questionBank.filter((q) => activeCats.includes(q.category))
+      : questionBank;
+
+    const unpickedPool = effectiveBank.filter(
+      (q) => !activeTexts.has(q.text.trim()) && !activeBaseIds.has(q.id.replace(/-skip-.*$/, '').replace(/-dup-.*$/, ''))
+    );
+
+    // 2. 若無任何未出過的新題目，嚴格遵守「絕不重複」原則：不補題、不重複循環舊題！
+    if (unpickedPool.length === 0) {
+      return { supplemented: false, remainingCount: 0 };
+    }
+
+    // 3. 嚴格鎖定同難度的新題，絕不跨難度替補（例如初級絕不替補中級或高級題目）
+    const targetDifficulty = gameMode === 'multiplayer' ? roomSettings.difficulty : difficulty;
+    let candidates = unpickedPool;
+    if (targetDifficulty !== 'all') {
+      candidates = unpickedPool.filter((q) => q.difficulty === targetDifficulty);
+    }
+
+    // 若指定難度已無任何未出過的新題目，嚴格遵守規則不進行跨難度替補
+    if (candidates.length === 0) {
+      return { supplemented: false, remainingCount: 0 };
+    }
+
+    // 4. 隨機挑選一道未出過的全新題目並補充至隊尾
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    if (!picked) {
+      return { supplemented: false, remainingCount: 0 };
+    }
+
     setActiveQuestions((prevActive) => {
-      const activeIds = new Set(prevActive.map((q) => q.id));
-      const unpickedPool = questionBank.filter((q) => !activeIds.has(q.id));
-
-      if (unpickedPool.length === 0) {
-        // 若全題庫已出完（極限情況全題庫已在佇列中），絕不重複塞入已跳過的卡住題目，避免死循環
-        return prevActive;
-      }
-
-      // 1. 優先挑選同難度的新題
-      const targetDifficulty = gameMode === 'multiplayer' ? roomSettings.difficulty : difficulty;
-      let candidates = unpickedPool;
-      if (targetDifficulty !== 'all') {
-        const sameDiffCandidates = unpickedPool.filter((q) => q.difficulty === targetDifficulty);
-        if (sameDiffCandidates.length > 0) {
-          candidates = sameDiffCandidates;
-        }
-      }
-
-      // 2. 隨機挑選一道未曾出現過的新題
-      const picked = candidates[Math.floor(Math.random() * candidates.length)];
-      if (!picked) return prevActive;
-
-      return [...prevActive, picked];
+      const isAlreadyIn = prevActive.some(
+        (q) => q.text.trim() === picked.text.trim() ||
+               q.id.replace(/-skip-.*$/, '').replace(/-dup-.*$/, '') === picked.id.replace(/-skip-.*$/, '').replace(/-dup-.*$/, '')
+      );
+      if (isAlreadyIn) return prevActive;
+      return [...prevActive, { ...picked, id: `${picked.id}-skip-${Date.now()}` }];
     });
+
+    return { supplemented: true, remainingCount: candidates.length - 1 };
   };
 
   // 單人/多人挑戰結算
@@ -277,6 +320,11 @@ export default function App() {
     netCpm?: number;
     missingChars?: number;
     missingRate?: number;
+    destroyedCount?: number;
+    perfectCount?: number;
+    goodCount?: number;
+    skippedCount?: number;
+    totalQuestionsCount?: number;
   }) => {
     setLatestStats(stats);
     if (gameMode === 'multiplayer') {
@@ -377,6 +425,8 @@ export default function App() {
             setDifficulty={setDifficulty}
             questionCount={questionCount}
             setQuestionCount={setQuestionCount}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
             onStartGame={handleStartSoloGame}
             questionBank={questionBank}
             onSwitchToMultiplayer={() => setGameMode('multiplayer')}
@@ -390,6 +440,7 @@ export default function App() {
             onStartBattle={handleStartMultiplayerBattle}
             onExitMultiplayer={handleQuitMultiplayer}
             soundOn={soundOn}
+            questionBank={questionBank}
           />
         )}
 
@@ -423,6 +474,9 @@ export default function App() {
             stats={latestStats}
             difficulty={difficulty}
             questionCount={questionCount}
+            destroyedCount={latestStats.destroyedCount}
+            totalQuestionsCount={latestStats.totalQuestionsCount || activeQuestions.length || questionCount}
+            selectedCategories={selectedCategories}
             onPlayAgain={handlePlayAgainSolo}
             onGoHome={handleQuitGame}
             onViewLeaderboard={() => setShowLeaderboard(true)}
@@ -482,19 +536,19 @@ export default function App() {
         >
           <div
             id="dialog-insufficient-questions"
-            className="w-full max-w-md bg-stone-900 border border-amber-500/50 rounded-2xl p-6 shadow-2xl space-y-4"
+            className="w-full max-w-lg sm:max-w-xl bg-stone-900 border border-amber-500/50 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3.5">
               <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <div className="space-y-1.5">
-                <h3 className="text-base sm:text-lg font-bold text-stone-100 leading-snug">
-                  當前題庫數量不足{insufficientPrompt.requiredCount}題，確定要繼續？
+              <div className="space-y-1.5 min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-bold text-stone-100 whitespace-nowrap overflow-hidden text-ellipsis">
+                  符合條件之題目僅有 {insufficientPrompt.availableCount} 題（設定目標為 {insufficientPrompt.requiredCount} 題）
                 </h3>
-                <p className="text-xs text-stone-400 leading-relaxed">
-                  目前題庫符合條件之題目僅有 <span className="text-amber-400 font-bold font-mono">{insufficientPrompt.availableCount}</span> 題（選取目標為 <span className="text-amber-400 font-bold font-mono">{insufficientPrompt.requiredCount}</span> 題）。若確定繼續，將以現有題目展開遊戲挑戰。
+                <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+                  若確定繼續，將直接以這 {insufficientPrompt.availableCount} 道題目開始遊戲。
                 </p>
               </div>
             </div>
@@ -506,7 +560,7 @@ export default function App() {
                 onClick={() => setInsufficientPrompt(null)}
                 className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs sm:text-sm font-medium transition-colors cursor-pointer"
               >
-                取消
+                返回調整
               </button>
               <button
                 id="btn-confirm-insufficient"
@@ -514,7 +568,7 @@ export default function App() {
                 onClick={insufficientPrompt.onConfirm}
                 className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs sm:text-sm font-bold shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
               >
-                確定繼續
+                以 {insufficientPrompt.availableCount} 題開始挑戰
               </button>
             </div>
           </div>

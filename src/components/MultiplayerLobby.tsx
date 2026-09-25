@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Users,
@@ -15,9 +15,10 @@ import {
   Zap,
   Sparkles,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Layers
 } from 'lucide-react';
-import { PlayerState, RoomSettings, Difficulty, QuestionCount } from '../types';
+import { PlayerState, RoomSettings, Difficulty, QuestionCount, QuestionItem } from '../types';
 import { P2PRoomManager } from '../utils/p2p';
 
 interface MultiplayerLobbyProps {
@@ -25,12 +26,14 @@ interface MultiplayerLobbyProps {
   onStartBattle: () => void;
   onExitMultiplayer: () => void;
   soundOn: boolean;
+  questionBank?: QuestionItem[];
 }
 
 export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   p2pManager,
   onStartBattle,
   onExitMultiplayer,
+  questionBank = [],
 }) => {
   // 狀態：'menu' (選擇開房或加入), 'in_lobby' (在房間大廳中)
   const [lobbyView, setLobbyView] = useState<'menu' | 'in_lobby'>(() => {
@@ -52,6 +55,28 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [questionCount, setQuestionCount] = useState<QuestionCount>(10);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // 統計所有分類與題數
+  const categoryStats = useMemo(() => {
+    const statsMap: Record<string, number> = {};
+    questionBank.forEach((q) => {
+      const cat = q.category || '未分類';
+      statsMap[cat] = (statsMap[cat] || 0) + 1;
+    });
+    return Object.entries(statsMap).map(([name, count]) => ({
+      name,
+      count,
+    })).sort((a, b) => b.count - a.count);
+  }, [questionBank]);
+
+  const handleToggleCategory = (categoryName: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryName)
+        ? prev.filter((c) => c !== categoryName)
+        : [...prev, categoryName]
+    );
+  };
 
   // 載入中與錯誤反饋
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
@@ -111,6 +136,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
         maxPlayers,
         difficulty,
         questionCount,
+        selectedCategories: selectedCategories.length > 0 ? selectedCategories : undefined,
       });
       setPlayers([...p2pManager.players]);
       setRoomSettings({ ...p2pManager.settings });
@@ -315,6 +341,58 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                 </div>
               </div>
 
+              {/* 指定題庫分類 (可選) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-amber-400" />
+                    指定題庫類別 (可選)
+                  </label>
+                  <span className="text-[11px] font-mono text-amber-300/80">
+                    {selectedCategories.length === 0
+                      ? '全部題庫'
+                      : `已指定 ${selectedCategories.length} 個分類`}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategories([])}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                      selectedCategories.length === 0
+                        ? 'bg-amber-500 text-stone-950 font-bold'
+                        : 'bg-stone-950/60 border border-stone-800 text-stone-400 hover:border-stone-700'
+                    }`}
+                  >
+                    🌐 全部題庫
+                  </button>
+                  {categoryStats.map((cat) => {
+                    const isSelected = selectedCategories.includes(cat.name);
+                    return (
+                      <button
+                        key={cat.name}
+                        type="button"
+                        onClick={() => handleToggleCategory(cat.name)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500/20 border border-amber-500 text-amber-300 ring-1 ring-amber-500/50'
+                            : 'bg-stone-950/60 border border-stone-800 text-stone-300 hover:border-stone-700'
+                        }`}
+                      >
+                        <span className="truncate max-w-[120px]">{cat.name}</span>
+                        <span
+                          className={`text-[10px] px-1 py-0.2 rounded-full font-mono ${
+                            isSelected ? 'bg-amber-500/30 text-amber-200' : 'bg-stone-800 text-stone-400'
+                          }`}
+                        >
+                          {cat.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* 難度設定 */}
               <div>
                 <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
@@ -491,6 +569,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
               <span className="bg-stone-950/80 px-3 py-1 rounded-full border border-stone-800 text-stone-300">
                 題數: {roomSettings.questionCount} 題
               </span>
+              {roomSettings.selectedCategories && roomSettings.selectedCategories.length > 0 && (
+                <span className="bg-stone-950/80 px-3 py-1 rounded-full border border-amber-500/40 text-amber-300 flex items-center gap-1">
+                  <Layers className="w-3 h-3 text-amber-400" />
+                  題庫: {roomSettings.selectedCategories.join('、')}
+                </span>
+              )}
             </div>
           </div>
 

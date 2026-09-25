@@ -25,37 +25,38 @@ import {
   parseCsvToQuestions,
   exportQuestionsToCsv,
   getExcelTemplateCsv,
+  formatLyricsMeaning,
 } from '../data/questions';
 
 // 標準題庫範本資料 (JSON 模式備用)
 const QUESTION_BANK_TEMPLATE: QuestionItem[] = [
   {
     id: "sample-01",
-    text: "縱然帶著永遠的傷口，至少我還擁有自由。",
+    text: "縱然帶著永遠的傷口，至少我還擁有自由",
     category: "經典歌詞",
     difficulty: "medium",
-    meaning: "伍佰《白鴿》自由與堅毅代表作"
+    meaning: "伍佰《白鴿》"
   },
   {
     id: "sample-02",
     text: "現在放棄的話，比賽就結束了。",
-    category: "漫畫名言",
+    category: "名言佳句",
     difficulty: "medium",
-    meaning: "《灌籃高手》安西教練激勵人心的經典台詞"
+    meaning: "井上雄彥《灌籃高手：安西教練（安西光義）》"
   },
   {
     id: "sample-03",
     text: "求知若飢，虛心若愚。",
-    category: "名人名言",
+    category: "名言佳句",
     difficulty: "easy",
-    meaning: "賈伯斯 Steve Jobs 畢業演說格言"
+    meaning: "史蒂夫·賈伯斯《史丹佛大學畢業演講》"
   },
   {
     id: "sample-04",
-    text: "我知道我的未來不是夢，我認真地過每一分鐘。",
+    text: "我的未來不是夢，我認真地過每一分鐘",
     category: "經典歌詞",
     difficulty: "medium",
-    meaning: "張雨生傳奇高音經典勵志名曲"
+    meaning: "張雨生《我的未來不是夢》"
   }
 ];
 
@@ -447,22 +448,22 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       </thead>
                       <tbody className="text-stone-400 divide-y divide-stone-800/80">
                         <tr>
-                          <td className="py-1.5 px-3 text-stone-200">天青色等煙雨，而我在等你。</td>
+                          <td className="py-1.5 px-3 text-stone-200">天青色等煙雨，而我在等你</td>
                           <td className="py-1.5 px-3 text-amber-300/90">經典歌詞</td>
                           <td className="py-1.5 px-3">medium</td>
-                          <td className="py-1.5 px-3 text-stone-400 truncate max-w-[200px]">周杰倫《青花瓷》方文山作詞名句</td>
+                          <td className="py-1.5 px-3 text-stone-400 truncate max-w-[200px]">周杰倫《青花瓷》</td>
                         </tr>
                         <tr>
                           <td className="py-1.5 px-3 text-stone-200">現在放棄的話，比賽就結束了。</td>
-                          <td className="py-1.5 px-3 text-amber-300/90">漫畫名言</td>
+                          <td className="py-1.5 px-3 text-amber-300/90">名言佳句</td>
                           <td className="py-1.5 px-3">medium</td>
-                          <td className="py-1.5 px-3 text-stone-400 truncate max-w-[200px]">《灌籃高手》安西教練經典台詞</td>
+                          <td className="py-1.5 px-3 text-stone-400 truncate max-w-[200px]">井上雄彥《灌籃高手：安西教練（安西光義）》</td>
                         </tr>
                         <tr>
                           <td className="py-1.5 px-3 text-stone-200">求知若飢，虛心若愚。</td>
-                          <td className="py-1.5 px-3 text-amber-300/90">名人名言</td>
+                          <td className="py-1.5 px-3 text-amber-300/90">名言佳句</td>
                           <td className="py-1.5 px-3">easy</td>
-                          <td className="py-1.5 px-3 text-stone-400 truncate max-w-[200px]">賈伯斯 Steve Jobs 畢業演說名言</td>
+                          <td className="py-1.5 px-3 text-stone-400 truncate max-w-[200px]">史蒂夫·賈伯斯《史丹佛大學畢業演講》</td>
                         </tr>
                       </tbody>
                     </table>
@@ -571,7 +572,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                           </span>
                           {item.meaning && (
                             <span className="text-stone-400 text-[11px] shrink-0 hidden md:inline" title={item.meaning}>
-                              {item.meaning}
+                              {formatLyricsMeaning(item.meaning, item.category)}
                             </span>
                           )}
                         </div>
@@ -736,7 +737,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                               </span>
                             </td>
                             <td className="py-2.5 px-3 text-stone-400 text-[11px] whitespace-normal min-w-[120px] max-w-sm" title={q.meaning}>
-                              {q.meaning || '—'}
+                              {formatLyricsMeaning(q.meaning, q.category) || '—'}
                             </td>
                           </tr>
                         ))
@@ -833,10 +834,10 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 [
   {
     "id": "custom-1",
-    "text": "縱然帶著永遠的傷口，至少我還擁有自由。",
+    "text": "縱然帶著永遠的傷口，至少我還擁有自由",
     "category": "經典歌詞",
     "difficulty": "medium",
-    "meaning": "伍佰《白鴿》自由與堅毅代表作"
+    "meaning": "伍佰《白鴿》"
   }
 ]`}
                 className="w-full h-36 bg-stone-950 border border-stone-800 rounded-2xl p-3.5 text-xs font-mono text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-500 resize-y"
