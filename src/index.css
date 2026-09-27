@@ -1,7 +1,22 @@
 @import "tailwindcss";
 
+:root, html, body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
 :root, html, body, button, input, textarea, select {
   font-family: "Microsoft JhengHei", "微軟正黑體", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.animate-input-shake {
+  animation: shake 0.4s ease-in-out;
 }
 
 @keyframes verticalSpeedline {
@@ -20,6 +35,7 @@
     opacity: 0;
   }
 }
+
 
 .speedline-vertical {
   position: absolute;

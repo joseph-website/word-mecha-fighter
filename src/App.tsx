@@ -9,13 +9,15 @@ import { AlertTriangle } from 'lucide-react';
 import { Header } from './components/Header';
 import { GameSetup } from './components/GameSetup';
 import { TypingArena } from './components/TypingArena';
-import { ResultModal } from './components/ResultModal';
-import { LeaderboardModal } from './components/LeaderboardModal';
-import { QuestionBankModal } from './components/QuestionBankModal';
-import { InstructionModal } from './components/InstructionModal';
-import { MultiplayerLobby } from './components/MultiplayerLobby';
 import { MultiplayerBattleBar } from './components/MultiplayerBattleBar';
-import { MultiplayerResultModal } from './components/MultiplayerResultModal';
+
+// 輕量化與按需載入：次要彈窗與連線模組透過 React.lazy 動態拆分，大幅縮減初始載入體積，保證遊玩與打字極速順暢
+const ResultModal = React.lazy(() => import('./components/ResultModal').then((m) => ({ default: m.ResultModal })));
+const LeaderboardModal = React.lazy(() => import('./components/LeaderboardModal').then((m) => ({ default: m.LeaderboardModal })));
+const QuestionBankModal = React.lazy(() => import('./components/QuestionBankModal').then((m) => ({ default: m.QuestionBankModal })));
+const InstructionModal = React.lazy(() => import('./components/InstructionModal').then((m) => ({ default: m.InstructionModal })));
+const MultiplayerLobby = React.lazy(() => import('./components/MultiplayerLobby').then((m) => ({ default: m.MultiplayerLobby })));
+const MultiplayerResultModal = React.lazy(() => import('./components/MultiplayerResultModal').then((m) => ({ default: m.MultiplayerResultModal })));
 import {
   Difficulty,
   QuestionCount,
@@ -23,7 +25,8 @@ import {
   GameStatus,
   GameMode,
   PlayerState,
-  RoomSettings
+  RoomSettings,
+  RoundReviewItem
 } from './types';
 import { getStoredQuestions, getRandomQuestions } from './data/questions';
 import { isSoundEnabled, getVolume, setVolume, toggleSound } from './utils/audio';
@@ -80,6 +83,7 @@ export default function App() {
     goodCount?: number;
     skippedCount?: number;
     totalQuestionsCount?: number;
+    roundReviews?: RoundReviewItem[];
   } | null>(null);
 
   // 多人連線專屬狀態
@@ -325,6 +329,7 @@ export default function App() {
     goodCount?: number;
     skippedCount?: number;
     totalQuestionsCount?: number;
+    roundReviews?: RoundReviewItem[];
   }) => {
     setLatestStats(stats);
     if (gameMode === 'multiplayer') {
@@ -388,22 +393,28 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen max-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden overflow-y-auto sm:overflow-y-hidden">
-      {/* Global Navigation Header */}
-      <Header
-        soundOn={soundOn}
-        volume={volume}
-        onVolumeChange={handleVolumeChange}
-        onToggleSound={handleToggleSound}
-        onOpenLeaderboard={() => setShowLeaderboard(true)}
-        onOpenQuestionBank={() => setShowQuestionBank(true)}
-        onOpenInstructions={() => setShowInstructions(true)}
-        onGoHome={handleQuitGame}
-        isPlaying={gameStatus === 'playing'}
-      />
+    <div className={`h-[100dvh] max-h-[100dvh] bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden ${
+      gameStatus === 'playing' ? 'overflow-hidden' : 'overflow-y-auto sm:overflow-y-hidden'
+    }`}>
+      {/* Global Navigation Header - 戰鬥中在手機與平板端自動收合，釋出全高給戰機與輸入框；非戰鬥或大型電腦端完整保留 */}
+      <div className={gameStatus === 'playing' ? 'hidden xl:block shrink-0' : 'w-full shrink-0'}>
+        <Header
+          soundOn={soundOn}
+          volume={volume}
+          onVolumeChange={handleVolumeChange}
+          onToggleSound={handleToggleSound}
+          onOpenLeaderboard={() => setShowLeaderboard(true)}
+          onOpenQuestionBank={() => setShowQuestionBank(true)}
+          onOpenInstructions={() => setShowInstructions(true)}
+          onGoHome={handleQuitGame}
+          isPlaying={gameStatus === 'playing'}
+        />
+      </div>
 
       {/* Main Game Stage */}
-      <main className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2.5 w-full relative min-h-0 overflow-y-auto sm:overflow-y-hidden">
+      <main className={`flex-1 flex flex-col items-center justify-center p-1 sm:p-2.5 w-full relative min-h-0 ${
+        gameStatus === 'playing' ? 'overflow-hidden' : 'overflow-y-auto sm:overflow-y-hidden'
+      }`}>
         {/* 連線通知 Toast */}
         <AnimatePresence>
           {noticeMessage && (
@@ -435,13 +446,15 @@ export default function App() {
 
         {/* === 2. 多人連線大廳 (開房隨機 6 位密碼 / 輸入密碼加入 2-6 人) === */}
         {gameMode === 'multiplayer' && gameStatus === 'idle' && (
-          <MultiplayerLobby
-            p2pManager={p2pManager}
-            onStartBattle={handleStartMultiplayerBattle}
-            onExitMultiplayer={handleQuitMultiplayer}
-            soundOn={soundOn}
-            questionBank={questionBank}
-          />
+          <React.Suspense fallback={<div className="min-h-[400px] flex items-center justify-center text-stone-500 font-mono text-sm">載入多人連線大廳...</div>}>
+            <MultiplayerLobby
+              p2pManager={p2pManager}
+              onStartBattle={handleStartMultiplayerBattle}
+              onExitMultiplayer={handleQuitMultiplayer}
+              soundOn={soundOn}
+              questionBank={questionBank}
+            />
+          </React.Suspense>
         )}
 
         {/* === 3. 戰鬥射擊主競技場 (單人或多人皆使用) === */}
@@ -470,62 +483,70 @@ export default function App() {
 
         {/* === 4. 單人結算畫面 === */}
         {gameMode === 'solo' && gameStatus === 'completed' && latestStats && (
-          <ResultModal
-            stats={latestStats}
-            difficulty={difficulty}
-            questionCount={questionCount}
-            destroyedCount={latestStats.destroyedCount}
-            totalQuestionsCount={latestStats.totalQuestionsCount || activeQuestions.length || questionCount}
-            selectedCategories={selectedCategories}
-            onPlayAgain={handlePlayAgainSolo}
-            onGoHome={handleQuitGame}
-            onViewLeaderboard={() => setShowLeaderboard(true)}
-          />
+          <React.Suspense fallback={null}>
+            <ResultModal
+              stats={latestStats}
+              difficulty={difficulty}
+              questionCount={questionCount}
+              destroyedCount={latestStats.destroyedCount}
+              totalQuestionsCount={latestStats.totalQuestionsCount || activeQuestions.length || questionCount}
+              selectedCategories={selectedCategories}
+              onPlayAgain={handlePlayAgainSolo}
+              onGoHome={handleQuitGame}
+              onViewLeaderboard={() => setShowLeaderboard(true)}
+            />
+          </React.Suspense>
         )}
 
         {/* === 5. 多人連線賽後頒獎台 === */}
         {gameMode === 'multiplayer' && multiplayerFinished && (
-          <MultiplayerResultModal
-            players={multiplayerPlayers}
-            myPlayerId={p2pManager.myPlayerId}
-            isHost={p2pManager.isHost}
-            settings={roomSettings}
-            onReturnToLobby={handleReturnToMultiplayerLobby}
-            onQuitMultiplayer={handleQuitMultiplayer}
-          />
+          <React.Suspense fallback={null}>
+            <MultiplayerResultModal
+              players={multiplayerPlayers}
+              myPlayerId={p2pManager.myPlayerId}
+              isHost={p2pManager.isHost}
+              settings={roomSettings}
+              onReturnToLobby={handleReturnToMultiplayerLobby}
+              onQuitMultiplayer={handleQuitMultiplayer}
+            />
+          </React.Suspense>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="w-full border-t border-stone-900 py-3 text-center text-xs text-stone-500">
-      </footer>
-
-      {/* Modals */}
-      {showInstructions && (
-        <InstructionModal
-          onClose={() => setShowInstructions(false)}
-          onOpenMultiplayer={() => {
-            setShowInstructions(false);
-            setGameMode('multiplayer');
-          }}
-          onOpenQuestionBank={() => {
-            setShowInstructions(false);
-            setShowQuestionBank(true);
-          }}
-        />
+      {/* Footer - 挑戰時隱藏，避免佔據平板與手機可視空間 */}
+      {gameStatus !== 'playing' && (
+        <footer className="w-full border-t border-stone-900 py-3 text-center text-xs text-stone-500">
+        </footer>
       )}
 
-      {showLeaderboard && (
-        <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
-      )}
+      {/* Modals - 延遲按需加載 */}
+      <React.Suspense fallback={null}>
+        {showInstructions && (
+          <InstructionModal
+            onClose={() => setShowInstructions(false)}
+            onOpenMultiplayer={() => {
+              setShowInstructions(false);
+              setGameMode('multiplayer');
+            }}
+            onOpenQuestionBank={() => {
+              setShowInstructions(false);
+              setShowQuestionBank(true);
+            }}
+          />
+        )}
 
-      {showQuestionBank && (
-        <QuestionBankModal
-          currentQuestions={questionBank}
-          onUpdateQuestions={(newQuestions) => setQuestionBank(newQuestions)}
-          onClose={() => setShowQuestionBank(false)}
-        />
-      )}
+        {showLeaderboard && (
+          <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+        )}
+
+        {showQuestionBank && (
+          <QuestionBankModal
+            currentQuestions={questionBank}
+            onUpdateQuestions={(newQuestions) => setQuestionBank(newQuestions)}
+            onClose={() => setShowQuestionBank(false)}
+          />
+        )}
+      </React.Suspense>
 
       {/* 題庫數量不足警告確認彈窗 */}
       {insufficientPrompt && insufficientPrompt.isOpen && (

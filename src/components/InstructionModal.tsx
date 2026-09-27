@@ -232,10 +232,10 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                   <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-800/40 space-y-1.5">
                     <span className="text-rose-400 font-bold text-xs flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4" />
-                      未達 70% 門檻 · 紅綠對比並重輸
+                      未達 70% 門檻 · 紅綠對比並保留修改
                     </span>
                     <p className="text-[11px] text-stone-300 leading-relaxed">
-                      若命中率<strong>低於 70%</strong>，砲火不足以破壞目標，畫面震動並顯示紅綠字元對比（綠色為正確、紅色為錯誤）。輸入框將自動清空，供玩家重新輸入。
+                      若命中率<strong>低於 70%</strong>，砲火不足以破壞目標，畫面與輸入框震動提示，並以紅綠標註錯處；輸入文字將完整保留，方便直接按 Backspace 修正錯字或補上標點後重新送出。
                     </p>
                   </div>
                 </div>

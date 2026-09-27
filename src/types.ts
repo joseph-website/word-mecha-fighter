@@ -22,6 +22,28 @@ export interface ReviewCharRecord {
   meaning?: string;
 }
 
+export interface RoundReviewChar {
+  char: string;
+  status: 'correct' | 'wrong' | 'unanswered';
+  userChar?: string;
+}
+
+export interface RoundReviewItem {
+  id: string;
+  questionIndex: number;
+  questionText: string;
+  bopomofo?: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  meaning?: string;
+  status: 'perfect' | 'passed' | 'skipped';
+  userTyped?: string;
+  evaluatedChars?: RoundReviewChar[];
+  damagePercent?: number;
+  correctCount?: number;
+  errorCount?: number;
+}
+
 export interface GameRecord {
   id: string;
   playerName: string;
@@ -42,6 +64,7 @@ export interface GameRecord {
   missingChars?: number;
   missingRate?: number;
   reviewItems?: ReviewCharRecord[];
+  roundReviews?: RoundReviewItem[];
 }
 
 

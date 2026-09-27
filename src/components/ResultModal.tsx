@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Trophy,
   Share2,
@@ -12,11 +13,17 @@ import {
   Target,
   ExternalLink,
   Twitter,
-  Facebook
+  Facebook,
+  BookOpen,
+  ChevronRight
 } from 'lucide-react';
-import { GameRecord } from '../types';
-import { calculateGrade, saveLeaderboardRecord } from '../utils/leaderboard';
+import { GameRecord, RoundReviewItem } from '../types';
+import { calculateGrade, saveLeaderboardRecord, getLeaderboardRecords } from '../utils/leaderboard';
 import { playVictorySound } from '../utils/audio';
+
+const RoundReviewModal = React.lazy(() =>
+  import('./arena/RoundReviewModal').then((m) => ({ default: m.RoundReviewModal }))
+);
 
 // 依據官方規範之噗浪 (Plurk) 官方識別標誌與標準色 (#FF574D)
 const PlurkIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -44,6 +51,7 @@ interface ResultModalProps {
     goodCount?: number;
     skippedCount?: number;
     totalQuestionsCount?: number;
+    roundReviews?: RoundReviewItem[];
   };
   difficulty: string;
   questionCount: number;
@@ -76,6 +84,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [shareFeedback, setShareFeedback] = useState<string>('');
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
 
   // 錯字率與漏字率計算
   const missingChars = stats.missingChars ?? 0;
@@ -97,6 +106,38 @@ export const ResultModal: React.FC<ResultModalProps> = ({
       : 0;
 
   const netCpm = stats.netCpm !== undefined ? stats.netCpm : stats.cpm;
+
+  // 檢查是否突破個人歷史最佳紀錄 (New PB)
+  const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
+  const [previousBestCpm, setPreviousBestCpm] = useState<number | null>(null);
+
+  useEffect(() => {
+    try {
+      const records = getLeaderboardRecords();
+      if (records && records.length > 0) {
+        const best = Math.max(...records.map((r) => r.netCpm || r.cpm));
+        setPreviousBestCpm(best);
+        if (netCpm > best) {
+          setIsNewRecord(true);
+          // 突破紀錄發射專屬金色慶祝紙花
+          setTimeout(() => {
+            try {
+              confetti({
+                particleCount: 85,
+                spread: 90,
+                origin: { y: 0.4 },
+                colors: ['#fbbf24', '#f59e0b', '#d97706', '#ffffff'],
+              });
+            } catch {
+              // ignore
+            }
+          }, 350);
+        }
+      }
+    } catch (e) {
+      console.error('Error checking personal best:', e);
+    }
+  }, [netCpm]);
 
   // 觸發慶祝紙花與勝利音效
   useEffect(() => {
@@ -146,6 +187,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
       netCpm,
       missingChars,
       missingRate,
+      roundReviews: stats.roundReviews,
     };
 
     saveLeaderboardRecord(record);
@@ -175,7 +217,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
 ⏱️ 防禦耗時：${stats.timeElapsedSeconds.toFixed(1)} 秒
 🔥 最高連擊：${stats.maxCombo} Combo
 🎖️ 戰鬥評級：【${grade} 級】！
-來空中挑戰打字擊破吧 👉 ${typeof window !== 'undefined' ? window.location.href : ''}`;
+${isNewRecord ? '🏆 突破個人最佳成績！\n' : ''}來空中挑戰打字擊破吧 👉 ${typeof window !== 'undefined' ? window.location.href : ''}`;
 
   // 複製文字至剪貼簿
   const handleCopyShare = async () => {
@@ -210,84 +252,170 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   return (
     <div
       id="result-modal-backdrop"
-      className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
     >
       <div
         id="result-modal-content"
-        className="w-full max-w-xl bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-auto animate-scale-up"
+        className="w-full max-w-lg bg-stone-900 border border-stone-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 my-auto animate-scale-up"
       >
         {/* Header with Grade Badge */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-stone-950 font-black text-4xl shadow-xl shadow-amber-500/25 ring-4 ring-amber-500/20">
+        <div className="text-center space-y-1.5">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-stone-950 font-black text-3xl shadow-lg shadow-amber-500/20 ring-4 ring-amber-500/20">
             {grade}
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-stone-100">
+
+          {/* 突破個人紀錄提示文字與慶祝動畫 */}
+          {isNewRecord && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: -6 }}
+              animate={{ scale: [0.5, 1.08, 1], opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.15 }}
+              className="relative overflow-hidden mx-auto max-w-sm bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 border border-amber-400/90 rounded-xl p-2 shadow-[0_0_20px_rgba(251,191,36,0.35)]"
+            >
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-1">
+                <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs sm:text-sm tracking-wide">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-spin-slow shrink-0" />
+                  <span>🏆 突破個人最佳紀錄 NEW RECORD 🏆</span>
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-spin-slow shrink-0" />
+                </div>
+                {previousBestCpm !== null && (
+                  <span className="text-[10px] text-amber-200/90 font-mono bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-500/50">
+                    原最佳 {previousBestCpm} ➔ <strong>新紀錄 {netCpm} CPM</strong>
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          <h2 className="text-lg sm:text-xl font-bold text-stone-100">
             {totalQuestions > 0 && actualDestroyedCount >= totalQuestions
               ? '空域目標全數擊破！'
               : actualDestroyedCount > 0
               ? '空域防衛作戰完成！'
               : '空域防衛作戰結束！'}
           </h2>
-          <p className="text-xs sm:text-sm text-stone-400">
-            成功防禦並擊破 {actualDestroyedCount} 題【{difficultyLabel}】空中飄浮詞句
+          <p className="text-xs text-stone-400">
+            成功防禦並擊破 {actualDestroyedCount} 題【{difficultyLabel}】
             {selectedCategories && selectedCategories.length > 0 && (
               <span className="text-amber-400 block sm:inline sm:ml-1.5">
-                · 題庫：{selectedCategories.join('、')}
+                · {selectedCategories.join('、')}
               </span>
             )}
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
-            <span className="text-[11px] text-stone-400 block mb-1">淨打字速度</span>
-            <span className="text-xl sm:text-2xl font-bold font-mono text-amber-400">{stats.cpm}</span>
-            <span className="text-[10px] text-stone-500 block">Net CPM</span>
+        {/* Stats Grid - 精簡 3 欄 2 排 HUD 儀表 */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2 sm:p-2.5">
+            <span className="text-[11px] text-stone-400 block">打字速度</span>
+            <span className="text-lg sm:text-xl font-bold font-mono text-amber-400">{stats.cpm}</span>
+            <span className="text-[9px] text-stone-500 block">Net CPM</span>
           </div>
 
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
-            <span className="text-[11px] text-stone-400 block mb-1">命中準確率</span>
-            <span className="text-xl sm:text-2xl font-bold font-mono text-emerald-400">{stats.accuracy}%</span>
-            <span className="text-[10px] text-rose-400/90 block font-mono">錯字率 {errorRate}%</span>
+          <div className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2 sm:p-2.5">
+            <span className="text-[11px] text-stone-400 block">命中準率</span>
+            <span className="text-lg sm:text-xl font-bold font-mono text-emerald-400">{stats.accuracy}%</span>
+            <span className="text-[9px] text-rose-400/90 block font-mono">錯字 {errorRate}%</span>
           </div>
 
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
-            <span className="text-[11px] text-stone-400 block mb-1">漏字率</span>
-            <span className={`text-xl sm:text-2xl font-bold font-mono ${missingChars === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <div className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2 sm:p-2.5">
+            <span className="text-[11px] text-stone-400 block">漏字率</span>
+            <span className={`text-lg sm:text-xl font-bold font-mono ${missingChars === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
               {missingRate}%
             </span>
-            <span className="text-[10px] text-stone-400 block font-mono">
-              {missingChars > 0 ? `漏打 ${missingChars} 字` : '零漏字 ⭐'}
+            <span className="text-[9px] text-stone-400 block font-mono">
+              {missingChars > 0 ? `漏 ${missingChars} 字` : '零漏字 ⭐'}
             </span>
           </div>
 
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
-            <span className="text-[11px] text-stone-400 block mb-1">擊破字數</span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-sky-400">{stats.correctChars}<span className="text-xs text-stone-500">/{stats.totalChars}</span></span>
-            <span className="text-[10px] text-stone-500 block">正確/總字數</span>
-          </div>
-
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
-            <span className="text-[11px] text-stone-400 block mb-1">總耗時</span>
-            <span className="text-xl sm:text-2xl font-bold font-mono text-stone-200">
-              {stats.timeElapsedSeconds.toFixed(1)}
+          <div className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2 sm:p-2.5">
+            <span className="text-[11px] text-stone-400 block">擊破字數</span>
+            <span className="text-base sm:text-lg font-bold font-mono text-sky-400">
+              {stats.correctChars}<span className="text-xs text-stone-500">/{stats.totalChars}</span>
             </span>
-            <span className="text-[10px] text-stone-500 block">秒</span>
+            <span className="text-[9px] text-stone-500 block">字數</span>
           </div>
 
-          <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-2.5 text-center flex flex-col justify-between">
-            <span className="text-[11px] text-stone-400 block mb-1">最高連擊</span>
-            <span className="text-xl sm:text-2xl font-bold font-mono text-orange-400">{stats.maxCombo}</span>
-            <span className="text-[10px] text-stone-500 block">Combo</span>
+          <div className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2 sm:p-2.5">
+            <span className="text-[11px] text-stone-400 block">總耗時</span>
+            <span className="text-base sm:text-lg font-bold font-mono text-stone-200">
+              {stats.timeElapsedSeconds.toFixed(1)}s
+            </span>
+            <span className="text-[9px] text-stone-500 block">秒</span>
+          </div>
+
+          <div className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2 sm:p-2.5">
+            <span className="text-[11px] text-stone-400 block">最高連擊</span>
+            <span className="text-base sm:text-lg font-bold font-mono text-orange-400">{stats.maxCombo}</span>
+            <span className="text-[9px] text-stone-500 block">Combo</span>
           </div>
         </div>
 
-        {/* Save to Leaderboard Section */}
-        <div className="bg-stone-950/60 border border-stone-800/90 rounded-2xl p-4 space-y-3">
+        {/* 戰績回顧功能按鈕 (點擊彈出專屬獨立視窗) */}
+        {stats.roundReviews && stats.roundReviews.length > 0 && (() => {
+          const reviews = stats.roundReviews;
+          const perfectCount = reviews.filter((r) => r.status === 'perfect').length;
+          const passedCount = reviews.filter((r) => r.status === 'passed').length;
+          const skippedCount = reviews.filter((r) => r.status === 'skipped').length;
+
+          return (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsReviewModalOpen(true)}
+                className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-stone-950/80 hover:bg-stone-900 border border-stone-800 hover:border-amber-500/50 transition-all group cursor-pointer shadow-md"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 sm:p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 group-hover:scale-105 transition-transform shrink-0">
+                    <BookOpen className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="text-xs sm:text-sm font-bold text-stone-200 group-hover:text-amber-300 transition-colors">
+                        戰績回顧
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full bg-stone-800 text-stone-300 font-mono">
+                        共 {reviews.length} 題
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-stone-400 mt-0.5 font-mono">
+                      {perfectCount > 0 && (
+                        <span className="text-emerald-400 font-semibold">Perfect {perfectCount}</span>
+                      )}
+                      {passedCount > 0 && (
+                        <span className="text-amber-400 font-semibold">Good {passedCount}</span>
+                      )}
+                      {skippedCount > 0 && (
+                        <span className="text-rose-400 font-semibold">Pass {skippedCount}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 text-xs text-stone-400 group-hover:text-amber-400 transition-colors shrink-0">
+                  <span className="text-[11px] hidden xs:inline">點擊查看詳情</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </button>
+
+              {isReviewModalOpen && (
+                <React.Suspense fallback={null}>
+                  <RoundReviewModal
+                    roundReviews={reviews}
+                    isOpen={isReviewModalOpen}
+                    onClose={() => setIsReviewModalOpen(false)}
+                  />
+                </React.Suspense>
+              )}
+            </>
+          );
+        })()}
+
+        {/* Save to Leaderboard Section - 精簡單行佈局 */}
+        <div className="bg-stone-950/60 border border-stone-800/90 rounded-xl p-3 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-stone-300 flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-amber-400" />
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
               登記至個人成績紀錄
             </span>
             {isSaved && <span className="text-emerald-400 text-xs font-medium">已成功儲存！</span>}
@@ -300,25 +428,25 @@ export const ResultModal: React.FC<ResultModalProps> = ({
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="輸入你的大名或暱稱..."
+                placeholder="輸入大名或暱稱..."
                 maxLength={12}
-                className="flex-1 bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-sm text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                className="flex-1 bg-stone-900 border border-stone-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500"
               />
               <button
                 id="btn-save-record"
                 type="submit"
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all"
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-lg text-xs shadow-md transition-all cursor-pointer"
               >
                 保存紀錄
               </button>
             </form>
           ) : (
-            <div className="flex items-center justify-between text-xs text-stone-400 bg-stone-900/60 px-3 py-2 rounded-xl">
+            <div className="flex items-center justify-between text-xs text-stone-400 bg-stone-900/60 px-3 py-1.5 rounded-lg">
               <span>玩家：{playerName}</span>
               <button
                 id="btn-view-leaderboard-from-result"
                 onClick={onViewLeaderboard}
-                className="text-amber-400 hover:underline flex items-center gap-1"
+                className="text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 前往查看個人成績 &rarr;
               </button>
@@ -326,63 +454,57 @@ export const ResultModal: React.FC<ResultModalProps> = ({
           )}
         </div>
 
-        {/* Social Sharing Mechanism Section */}
-        <div className="bg-stone-950/60 border border-stone-800/90 rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between text-xs">
+        {/* Social Sharing Section - 精簡社群分享列 */}
+        <div className="bg-stone-950/60 border border-stone-800/90 rounded-xl p-3">
+          <div className="flex items-center justify-between text-xs mb-2">
             <span className="font-semibold text-stone-300 flex items-center gap-1.5">
-              <Share2 className="w-4 h-4 text-amber-400" />
-              社群分享成績卡
+              <Share2 className="w-3.5 h-3.5 text-amber-400" />
+              分享成績卡
             </span>
-            {shareFeedback && <span className="text-amber-400 text-xs">{shareFeedback}</span>}
+            {shareFeedback && <span className="text-amber-400 text-xs font-mono">{shareFeedback}</span>}
           </div>
 
-          {/* Formatted Share Preview Snippet */}
-          <div className="p-3 bg-stone-900/80 rounded-xl border border-stone-800 text-xs text-stone-300 font-mono whitespace-pre-line leading-relaxed max-h-24 overflow-y-auto">
-            {shareText}
-          </div>
-
-          {/* Share Action Buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+          <div className="grid grid-cols-4 gap-2">
             <button
               id="btn-copy-share-text"
               onClick={handleCopyShare}
-              className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-stone-300" />}
               <span>{copied ? '已複製' : '複製'}</span>
             </button>
 
             <button
               id="btn-share-plurk"
               onClick={shareToPlurk}
-              className="px-3 py-2 rounded-xl bg-[#FF574D]/15 border border-[#FF574D]/30 hover:bg-[#FF574D]/25 text-[#FF574D] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-[#FF574D]/15 border border-[#FF574D]/30 hover:bg-[#FF574D]/25 text-[#FF574D] text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
-              <PlurkIcon className="w-4 h-4" />
+              <PlurkIcon className="w-3.5 h-3.5" />
               <span>Plurk</span>
             </button>
 
             <button
               id="btn-share-facebook"
               onClick={shareToFacebook}
-              className="px-3 py-2 rounded-xl bg-[#1877F2]/15 border border-[#1877F2]/30 hover:bg-[#1877F2]/25 text-[#1877F2] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-[#1877F2]/15 border border-[#1877F2]/30 hover:bg-[#1877F2]/25 text-[#1877F2] text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
-              <Facebook className="w-4 h-4" />
-              <span>Facebook</span>
+              <Facebook className="w-3.5 h-3.5" />
+              <span>FB</span>
             </button>
 
             <button
               id="btn-share-twitter"
               onClick={shareToTwitter}
-              className="px-3 py-2 rounded-xl bg-[#1DA1F2]/15 border border-[#1DA1F2]/30 hover:bg-[#1DA1F2]/25 text-[#1DA1F2] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-[#1DA1F2]/15 border border-[#1DA1F2]/30 hover:bg-[#1DA1F2]/25 text-[#1DA1F2] text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
-              <Twitter className="w-4 h-4" />
-              <span>X（推特）</span>
+              <Twitter className="w-3.5 h-3.5" />
+              <span>X (推特)</span>
             </button>
           </div>
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="flex items-center justify-between pt-2 gap-3">
+        <div className="flex items-center justify-between pt-1 gap-2.5">
           <button
             id="btn-return-home"
             onClick={onGoHome}

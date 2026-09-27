@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Flame, Zap, CheckCircle2, Flag } from 'lucide-react';
+import { Trophy, Flame, Zap, CheckCircle2, Flag, Crown } from 'lucide-react';
 import { PlayerState } from '../types';
 
 interface MultiplayerBattleBarProps {
@@ -29,15 +29,38 @@ export const MultiplayerBattleBar: React.FC<MultiplayerBattleBarProps> = ({
     return b.cpm - a.cpm;
   });
 
+  const totalPlayers = players.length;
+  const myRankIndex = sortedPlayers.findIndex((p) => p.id === myPlayerId);
+  const myRank = myRankIndex !== -1 ? myRankIndex + 1 : 1;
+  const isMyRankFirst = myRank === 1;
+
   return (
     <div className="w-full max-w-5xl mx-auto mb-4 px-2">
       {/* 連線對戰即時賽況板 */}
       <div className="bg-stone-900/90 border border-stone-800/90 rounded-xl p-3 shadow-lg backdrop-blur-md">
-        <div className="flex items-center justify-between mb-2 text-xs font-semibold text-stone-400">
-          <span className="flex items-center gap-1.5 text-amber-400">
-            <Trophy className="w-3.5 h-3.5" />
-            多人對決即時名次榜 ({players.length} 人競速)
-          </span>
+        <div className="flex items-center justify-between mb-2 text-xs font-semibold text-stone-400 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-amber-400">
+              <Trophy className="w-3.5 h-3.5" />
+              多人對決即時名次榜
+            </span>
+
+            {/* 即時排名：顯示方式為 當前名次/所有玩家，若為第一名則另外增加一個小皇冠圖案 */}
+            <div
+              id="multiplayer-my-live-rank"
+              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg border font-mono font-bold text-xs sm:text-sm shadow-sm transition-all ${
+                isMyRankFirst
+                  ? 'bg-amber-500/20 border-amber-400/80 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
+                  : 'bg-stone-800 border-stone-700 text-stone-200'
+              }`}
+            >
+              {isMyRankFirst && (
+                <Crown className="w-4 h-4 text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_#f59e0b] animate-bounce" />
+              )}
+              <span>{myRank}/{totalPlayers}</span>
+            </div>
+          </div>
+
           <span className="text-[11px] text-stone-500 font-mono">
             目標: 先擊破全數 {totalQuestions} 題者奪冠
           </span>
@@ -48,8 +71,7 @@ export const MultiplayerBattleBar: React.FC<MultiplayerBattleBarProps> = ({
           {sortedPlayers.map((player, rankIndex) => {
             const isMe = player.id === myPlayerId;
             const rank = rankIndex + 1;
-            const rankMedal =
-              rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+            const isPlayerFirst = rank === 1;
 
             return (
               <div
@@ -61,13 +83,18 @@ export const MultiplayerBattleBar: React.FC<MultiplayerBattleBarProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5 font-bold truncate max-w-[130px]">
-                    <span className="font-mono text-sm">{rankMedal}</span>
+                  <div className="flex items-center gap-1.5 font-bold truncate max-w-[150px]">
+                    {isPlayerFirst && (
+                      <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                    )}
+                    <span className="font-mono text-xs text-stone-400">
+                      {rank}/{totalPlayers}
+                    </span>
                     <span className={`truncate ${isMe ? 'text-amber-300' : 'text-stone-200'}`}>
                       {player.name}
                     </span>
                     {isMe && (
-                      <span className="text-[10px] text-amber-400 bg-amber-950 px-1 rounded border border-amber-800/80">
+                      <span className="text-[10px] text-amber-400 bg-amber-950 px-1 rounded border border-amber-800/80 shrink-0">
                         我
                       </span>
                     )}
