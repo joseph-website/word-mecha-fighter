@@ -48,11 +48,11 @@ export const MultiplayerResultModal: React.FC<MultiplayerResultModalProps> = ({
   }, [isWinner]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex justify-center items-start sm:items-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-2xl bg-stone-900 border-2 border-amber-500/40 rounded-2xl shadow-2xl p-6 sm:p-8 text-stone-100 relative my-8"
+        className="w-full max-w-2xl bg-stone-900 border-2 border-amber-500/40 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 text-stone-100 relative my-auto"
       >
         {/* 頂部稱號 */}
         <div className="text-center mb-6">

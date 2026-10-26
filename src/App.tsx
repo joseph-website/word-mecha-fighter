@@ -525,11 +525,11 @@ export default function App() {
   };
 
   return (
-    <div className={`h-[100dvh] max-h-[100dvh] bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden ${
-      gameStatus === 'playing' ? 'overflow-hidden' : 'overflow-y-auto sm:overflow-y-hidden'
+    <div className={`w-full bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden ${
+      gameStatus === 'playing' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-[100dvh] h-auto overflow-y-auto'
     }`}>
       {/* Global Navigation Header - 戰鬥中在矮螢幕 (垂直高度低於 850px)、筆電或手機端自動收合，釋出全高給戰機與輸入框；高解析高垂直螢幕或非戰鬥時完整保留 */}
-      <div className={gameStatus === 'playing' ? 'hidden [@media(min-width:1280px)_and_(min-height:850px)]:block shrink-0' : 'w-full shrink-0'}>
+      <div className={gameStatus === 'playing' ? 'hidden [@media(min-width:1280px)_and_(min-height:850px)]:block shrink-0' : 'w-full shrink-0 sticky top-0 z-40'}>
         <Header
           soundOn={soundOn}
           volume={volume}
@@ -543,9 +543,9 @@ export default function App() {
         />
       </div>
 
-      {/* Main Game Stage */}
-      <main className={`flex-1 flex flex-col items-center justify-center p-1 sm:p-2.5 w-full relative min-h-0 ${
-        gameStatus === 'playing' ? 'overflow-hidden' : 'overflow-y-auto sm:overflow-y-hidden'
+      {/* Main Game Stage - 戰鬥時鎖定並居中戰場；選單與大廳時頂部對齊並支援平滑向下捲動，絕不截斷按鈕 */}
+      <main className={`flex-1 flex flex-col items-center w-full relative min-h-0 ${
+        gameStatus === 'playing' ? 'justify-center p-1 sm:p-2.5 overflow-hidden' : 'justify-start p-2 sm:p-4 md:py-6 overflow-y-visible'
       }`}>
         {/* 連線通知 Toast */}
         <AnimatePresence>

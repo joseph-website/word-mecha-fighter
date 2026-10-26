@@ -65,12 +65,12 @@ export const MultiplayerWaitingRoom: React.FC<MultiplayerWaitingRoomProps> = ({
   return (
     <div
       id="multiplayer-waiting-monitor"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-stone-950/90 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex justify-center items-start sm:items-center p-2.5 sm:p-6 bg-stone-950/90 backdrop-blur-md overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-4xl bg-stone-900 border-2 border-amber-500/50 rounded-2xl shadow-2xl p-4 sm:p-6 text-stone-100 relative my-4 space-y-4 sm:space-y-5"
+        className="w-full max-w-4xl bg-stone-900 border-2 border-amber-500/50 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 text-stone-100 relative my-auto space-y-4 sm:space-y-5"
       >
         {/* 頂部戰情中心標頭 */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800">

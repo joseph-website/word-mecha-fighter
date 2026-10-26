@@ -236,12 +236,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   const canStartGame = isHost && players.length >= 2 && allGuestsReady;
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-6">
+    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-3 sm:py-6 pb-12 sm:pb-16 animate-fade-in">
       {/* 頂部返回 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           onClick={lobbyView === 'in_lobby' ? handleLeaveRoom : onExitMultiplayer}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-900/80 hover:bg-stone-800 text-stone-300 text-sm transition-colors border border-stone-800"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-900/80 hover:bg-stone-800 text-stone-300 text-xs sm:text-sm transition-colors border border-stone-800 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           {lobbyView === 'in_lobby' ? '退出房間' : '返回單人模式'}
@@ -255,16 +255,16 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6 p-4 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-200 flex items-start gap-3 text-sm"
+            className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-200 flex items-start gap-3 text-xs sm:text-sm"
           >
-            <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="font-medium text-rose-300">連線提醒</div>
               <div className="text-rose-300/80 mt-0.5">{errorMessage}</div>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-rose-400 hover:text-rose-200 text-xs underline ml-2"
+              className="text-rose-400 hover:text-rose-200 text-xs underline ml-2 cursor-pointer"
             >
               關閉
             </button>
@@ -274,19 +274,19 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
       {/* === 視圖 1: 開房 / 加入選單 === */}
       {lobbyView === 'menu' && (
-        <div className="bg-stone-900/90 border border-stone-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-wider text-amber-300 flex items-center justify-center gap-3">
-              <Users className="w-8 h-8 text-amber-400" />
+        <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl backdrop-blur-md">
+          <div className="text-center mb-5 sm:mb-7">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-wider text-amber-300 flex items-center justify-center gap-2 sm:gap-3">
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
               多人即時連線對戰 (2-6人)
             </h2>
-            <p className="text-stone-400 text-sm mt-2">
+            <p className="text-stone-400 text-xs sm:text-sm mt-1.5 sm:mt-2">
               無需任何伺服器帳號，輸入 6 位數字密碼即刻開戰！
             </p>
           </div>
 
           {/* 玩家暱稱輸入 */}
-          <div className="max-w-md mx-auto mb-8">
+          <div className="max-w-md mx-auto mb-5 sm:mb-7">
             <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
               你的戰士稱號 (暱稱)
             </label>
@@ -297,16 +297,16 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                 onChange={(e) => setPlayerName(e.target.value.slice(0, 12))}
                 maxLength={12}
                 placeholder="請輸入暱稱"
-                className="w-full px-4 py-3 bg-stone-950/80 border border-stone-700 rounded-xl text-stone-100 font-medium focus:outline-none focus:border-amber-500 transition-colors text-center text-lg"
+                className="w-full px-4 py-2.5 sm:py-3 bg-stone-950/80 border border-stone-700 rounded-xl text-stone-100 font-medium focus:outline-none focus:border-amber-500 transition-colors text-center text-base sm:text-lg"
               />
             </div>
           </div>
 
           {/* 開房 / 加入 分頁切換 */}
-          <div className="flex max-w-md mx-auto bg-stone-950 p-1.5 rounded-xl border border-stone-800 mb-8">
+          <div className="flex max-w-md mx-auto bg-stone-950 p-1.5 rounded-xl border border-stone-800 mb-5 sm:mb-7">
             <button
               onClick={() => setActiveTab('create')}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'create'
                   ? 'bg-amber-500 text-stone-950 shadow-md'
                   : 'text-stone-400 hover:text-stone-200'
@@ -317,7 +317,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('join')}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'join'
                   ? 'bg-amber-500 text-stone-950 shadow-md'
                   : 'text-stone-400 hover:text-stone-200'

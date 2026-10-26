@@ -124,17 +124,17 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   ];
 
   return (
-    <div id="game-setup-container" className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-1 sm:py-3 space-y-2 sm:space-y-4 animate-fade-in">
+    <div id="game-setup-container" className="w-full max-w-4xl lg:max-w-5xl mx-auto px-2 sm:px-4 py-2 sm:py-4 pb-8 sm:pb-12 space-y-3 sm:space-y-5 animate-fade-in">
       {/* Hero Banner / Introduction */}
-      <div className="text-center space-y-1 sm:space-y-1.5">
+      <div className="text-center space-y-1 sm:space-y-2">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] sm:text-xs font-medium">
           <Compass className="w-3 h-3 text-amber-400" />
           <span>打字機動戰士 · 空中防衛線</span>
         </div>
-        <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-stone-100 tracking-tight">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-stone-100 tracking-tight">
           妙語如珠，例不虛發
         </h1>
-        <p className="text-[11px] sm:text-xs text-stone-400 max-w-xl mx-auto leading-normal hidden xs:block">
+        <p className="text-xs sm:text-sm text-stone-400 max-w-xl mx-auto leading-normal hidden xs:block">
           詞語與句子在空中飄浮，在下方輸入欄鍵入整句，按 Enter 或點擊「發射擊破」即可進行雷射打擊！全部字元正確即可一擊擊破。
         </p>
 
@@ -159,7 +159,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       </div>
 
       {/* Main Settings Card */}
-      <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl shadow-stone-950/50 space-y-3 sm:space-y-4">
+      <div className="bg-stone-900/90 border border-stone-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 shadow-xl shadow-stone-950/50 space-y-3 sm:space-y-4">
         {/* Step 1: Select Question Bank / Category (指定題庫) */}
         <div className="space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-1">
@@ -250,7 +250,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             <span className="text-[10px] sm:text-xs text-stone-400">自所選題庫隨機抽取</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
             {countOptions.map((opt) => {
               const isSelected = questionCount === opt.count;
               return (
@@ -277,7 +277,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           </div>
         </div>
 
-        {/* Step 3: Select Difficulty */}
+        {/* Step 3: Select Difficulty - 自適應響應網格 (極窄單欄、中型雙欄、寬螢幕四欄) */}
         <div className="space-y-1 sm:space-y-1.5 pt-1">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-stone-200 flex items-center gap-1.5">
@@ -287,7 +287,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             <span className="text-[10px] sm:text-xs text-stone-400">當前題庫共 {totalCount} 題</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
             {difficultyOptions.map((opt) => {
               const isSelected = difficulty === opt.id;
               return (
@@ -295,24 +295,29 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   key={opt.id}
                   id={`btn-diff-${opt.id}`}
                   onClick={() => setDifficulty(opt.id)}
-                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border text-left transition-all relative group ${
+                  className={`p-2.5 rounded-lg sm:rounded-xl border text-left transition-all relative group flex flex-col justify-between ${
                     isSelected
                       ? `ring-2 ring-amber-500/60 border-amber-500 bg-stone-950`
                       : `bg-stone-950/50 border-stone-800 text-stone-300 hover:border-stone-700 hover:bg-stone-950`
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-xs sm:text-sm text-stone-100">{opt.title}</span>
-                      <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full bg-stone-800 text-stone-300 font-mono">
-                        {opt.count}
+                  <div>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-xs sm:text-sm text-stone-100">{opt.title}</span>
+                        <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full bg-stone-800 text-stone-300 font-mono">
+                          {opt.count}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-medium text-stone-400 px-1 py-0.2 rounded bg-stone-800/80">
+                        {opt.tag}
                       </span>
                     </div>
-                    <span className="text-[9px] font-medium text-stone-400 px-1 py-0.2 rounded bg-stone-800/80 hidden xs:inline">
-                      {opt.tag}
-                    </span>
+                    <p className="text-[10px] sm:text-xs text-amber-400/90 font-medium truncate">{opt.sub}</p>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-amber-400/90 font-medium truncate">{opt.sub}</p>
+                  <p className="text-[10px] text-stone-500 mt-1 line-clamp-2 leading-relaxed hidden sm:block">
+                    {opt.desc}
+                  </p>
                 </button>
               );
             })}

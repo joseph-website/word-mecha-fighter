@@ -39,7 +39,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ onClose }) =
   return (
     <div
       id="leaderboard-modal-backdrop"
-      className="fixed inset-0 z-50 bg-stone-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-stone-950/85 backdrop-blur-md flex justify-center items-start sm:items-center p-3 sm:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div

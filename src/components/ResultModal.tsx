@@ -252,7 +252,7 @@ ${isNewRecord ? '🏆 突破個人最佳成績！\n' : ''}來空中挑戰打字�
   return (
     <div
       id="result-modal-backdrop"
-      className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex justify-center items-start sm:items-center p-3 sm:p-4 overflow-y-auto"
     >
       <div
         id="result-modal-content"
