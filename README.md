@@ -2,15 +2,15 @@
 
 > 妙語如珠，例不虛發 —— 中文打字射擊遊戲。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-amber.svg)](https://opensource.org/licenses/MIT)
-[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.x-purple.svg)](https://vitejs.dev/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.x-teal.svg)](https://tailwindcss.com/)
+[![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-amber.svg)](package.json)
+[![React: 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![TypeScript: 5.x](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Vite: 8.x](https://img.shields.io/badge/Vite-8.x-purple.svg)](https://vitejs.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-##  遊戲特色
+## 🎮 遊戲特色
 
 - **空中漂浮的敵人，快用雷射擊破它！**：目標句子在空中漂浮，於下方輸入欄鍵入整句，按 `Enter` 或點擊「發射擊破」即可發動攻擊！
 - **錯字、漏字，嚴格審查**：若有錯字、漏字或多餘的字，畫面會精確標示出來，並自動清空輸入欄。
@@ -22,57 +22,53 @@
 
 ---
 
-## 🛠️ 本地開發與啟動 (Local Development)
+## 🚀 快速啟動 (Quick Start)
 
 ### 1. 安裝相依套件
-
 ```bash
 npm install
 ```
 
-### 2. 啟動開發伺服器
-
+### 2. 啟動本地開發伺服器
 ```bash
 npm run dev
 ```
+瀏覽器開啟 `http://localhost:3000` 即可立即遊玩！
 
-開啟瀏覽器並造訪 `http://localhost:3000` 即可開始遊玩！
-
-### 3. 編譯生產版本 (Build)
-
+### 3. 生產版本編譯 (Build)
 ```bash
 npm run build
 ```
-
-產生的靜態網頁檔案將位於 `dist/` 目錄，可直接部署至 GitHub Pages、Vercel、Netlify 或 Cloudflare Pages。
+產出的靜態網頁檔案位於 `dist/` 目錄。
 
 ---
 
-## 📂 專案架構說明
+## 📂 核心架構概覽
 
 ```text
-├── index.html                  # HTML 入口
-├── package.json                # 專案相依性與指令
+├── index.html                   # 應用程式入口
+├── package.json                 # v1.2.0 套件設定與指令
 ├── src/
-│   ├── App.tsx                 # 主應用程式控制器與狀態流
+│   ├── App.tsx                  # 主控制器、全域狀態與路由調度
 │   ├── components/
-│   │   ├── TypingArena.tsx     # 空中防衛射擊戰場與雷射輸入核心
-│   │   ├── GameSetup.tsx       # 模式、難度與題數設定面板
-│   │   ├── Header.tsx          # 頂部導覽與功能選單
-│   │   ├── InstructionModal.tsx# 玩法說明與規則彈窗
-│   │   ├── LeaderboardModal.tsx# 個人歷史紀錄與成績排行榜
+│   │   ├── TypingArena.tsx      # 空中防衛戰場、雷射輸入與節流核心
+│   │   ├── MultiplayerBattleBar.tsx # 單軌簡易對戰跑道 (~38px)
+│   │   ├── MultiplayerLobby.tsx # 多人大廳與房間管理
+│   │   ├── MultiplayerWaitingRoom.tsx # 多人準備室
+│   │   ├── MultiplayerResultModal.tsx # 多人完賽頒獎台
+│   │   ├── InstructionModal.tsx # 遊戲說明與玩法指南
+│   │   ├── LeaderboardModal.tsx # 個人最佳成就與歷史排行榜
 │   │   ├── QuestionBankModal.tsx# 題庫檢視與 Excel/CSV 匯入匯出
-│   │   ├── ResultModal.tsx     # 單人結算成績卡與社群分享
-│   │   ├── MultiplayerLobby.tsx# 多人大廳與房間管理
-│   │   ├── MultiplayerBattleBar.tsx # 多人即時同步進度跑道
-│   │   └── MultiplayerResultModal.tsx # 多人頒獎典禮
+│   │   └── arena/               # 戰機砲塔 (FighterStation) 與複盤檢視
 │   ├── data/
-│   │   └── questions.ts        # 題庫資料與 CSV 解析工具
-│   ├── utils/
-│   │   ├── audio.ts            # Web Audio API 倒數與擊破音效合成器
-│   │   ├── leaderboard.ts      # 本機紀錄存取與等級計算
-│   │   └── p2p.ts              # WebRTC P2P 多人連線引擎
-│   └── types.ts                # TypeScript 介面定義
+│   │   ├── questions.ts         # 題庫狀態管理與 CSV 工具
+│   │   └── defaultQuestions.json# 內建 350 題在地文化文選
+│   └── utils/
+│       ├── audio.ts             # Web Audio API 脈衝倒數與擊破音效
+│       ├── p2p.ts               # WebRTC PeerJS 連線引擎
+│       ├── evaluator.ts         # LCS 智慧動態對齊字元評估器
+│       ├── scoring.ts           # Net CPM 淨速度與評級計算
+│       └── zhuyin.ts            # 教育部標準注音解析庫
 ```
 
 ---

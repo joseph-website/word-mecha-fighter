@@ -209,12 +209,21 @@ export const MultiplayerResultModal: React.FC<MultiplayerResultModalProps> = ({
               className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
-              回到房間準備下局 (全員同步)
+              回到房間準備下局 (重置訪客連線)
             </button>
           ) : (
-            <div className="text-xs text-stone-400 flex items-center gap-2 py-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-              等待房主開啟下一局...
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="text-xs text-stone-400 flex items-center gap-2 py-1">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                等待房主重置或點擊返回...
+              </div>
+              <button
+                onClick={onReturnToLobby}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                返回大廳 (重新輸入房號)
+              </button>
             </div>
           )}
         </div>

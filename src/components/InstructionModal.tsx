@@ -375,18 +375,22 @@ export const InstructionModal: React.FC<InstructionModalProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px] text-stone-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px] text-stone-300">
                   <div className="bg-stone-900/80 p-3 rounded-xl border border-stone-800">
                     <span className="text-amber-400 font-bold block mb-1">1. 建立專屬房間</span>
-                    房主進入多人大廳點擊「建立新房間」，系統即時產生一組隨機 6 位數房間代碼與一鍵複製邀請連結。
+                    房主點擊「建立新房間」產生 6 位隨機房號與邀請連結，可自選題數與難度。
                   </div>
                   <div className="bg-stone-900/80 p-3 rounded-xl border border-stone-800">
-                    <span className="text-amber-400 font-bold block mb-1">2. 好友代碼入房</span>
-                    好友點擊「加入房間」輸入 6 位代碼（或直接開啟邀請連結），即可無縫連線進入同一個準備室。
+                    <span className="text-amber-400 font-bold block mb-1">2. 快速加入準備室</span>
+                    好友輸入 6 位代碼（或點邀請連結）即可入房，全員按下準備後房主即可開戰。
                   </div>
                   <div className="bg-stone-900/80 p-3 rounded-xl border border-stone-800">
-                    <span className="text-amber-400 font-bold block mb-1">3. 同步跑道比拼</span>
-                    全員就緒後由房主發起戰鬥。頂部即時跑道動態呈現所有人的題數推進、CPM 與名次，最快擊破完全部題目者奪冠！
+                    <span className="text-amber-400 font-bold block mb-1">3. 單軌簡易賽道</span>
+                    頂部精簡跑道即時標記個人與對手進度、CPM 與名次皇冠，節省空間不遮擋輸入。
+                  </div>
+                  <div className="bg-stone-900/80 p-3 rounded-xl border border-stone-800">
+                    <span className="text-amber-400 font-bold block mb-1">4. 寬限結算與離線保護</span>
+                    首名完賽自動啟動動態寬限倒數；若房主或隊友中途斷線，系統自動轉為本機完賽結算。
                   </div>
                 </div>
               </div>

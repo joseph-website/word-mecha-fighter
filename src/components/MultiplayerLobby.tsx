@@ -119,9 +119,23 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
       onDisconnected: (reason) => {
         setErrorMessage(reason);
         setLobbyView('menu');
+        setActiveTab('join');
+        setJoinCodeInput('');
+      },
+      onLobbySessionReset: () => {
+        setLobbyView('menu');
+        setActiveTab('join');
+        setJoinCodeInput('');
+        setErrorMessage('對局已結束，請重新輸入 6 位房號以加入下一場！');
       },
       onReturnToLobby: () => {
-        setLobbyView('in_lobby');
+        if (p2pManager.isHost) {
+          setLobbyView('in_lobby');
+        } else {
+          setLobbyView('menu');
+          setActiveTab('join');
+          setJoinCodeInput('');
+        }
       },
     });
     return unsubscribe;

@@ -16,6 +16,9 @@ export interface P2PCallbacks {
   onError?: (errorMessage: string) => void;
   onDisconnected?: (reason: string) => void;
   onReturnToLobby?: () => void;
+  onLobbySessionReset?: () => void;
+  onSettlementCountdown?: (secondsLeft: number) => void;
+  onAllFinished?: () => void;
 }
 
 export class P2PRoomManager {
@@ -249,14 +252,23 @@ export class P2PRoomManager {
       case 'PROGRESS_UPDATE': {
         const target = this.players.find((p) => p.id === msg.playerId);
         if (target) {
+          // 單調遞增防護：若玩家已經被標記為完賽，禁止被後續延遲抵達的未完賽舊封包覆寫
+          if (target.isFinished && !msg.isFinished) {
+            break;
+          }
+          // 題號防回退：禁止題目進度被舊封包逆流
+          if (msg.questionIndex < target.questionIndex) {
+            break;
+          }
+
           target.questionIndex = msg.questionIndex;
           target.currentProgress = msg.currentProgress;
-          target.overallPercent = msg.overallPercent;
+          target.overallPercent = Math.max(target.overallPercent, msg.overallPercent);
           target.cpm = msg.cpm;
           target.wpm = msg.wpm;
           target.accuracy = msg.accuracy;
           target.combo = msg.combo;
-          target.isFinished = msg.isFinished;
+          target.isFinished = target.isFinished || msg.isFinished;
           if (msg.finishTime !== undefined) {
             target.finishTime = msg.finishTime;
           }
@@ -405,14 +417,23 @@ export class P2PRoomManager {
       case 'PROGRESS_UPDATE': {
         const player = this.players.find((p) => p.id === msg.playerId);
         if (player) {
+          // 單調遞增防護：若玩家已經被標記為完賽，禁止被後續延遲抵達的未完賽舊封包覆寫
+          if (player.isFinished && !msg.isFinished) {
+            break;
+          }
+          // 題號防回退：禁止題目進度被舊封包逆流
+          if (msg.questionIndex < player.questionIndex) {
+            break;
+          }
+
           player.questionIndex = msg.questionIndex;
           player.currentProgress = msg.currentProgress;
-          player.overallPercent = msg.overallPercent;
+          player.overallPercent = Math.max(player.overallPercent, msg.overallPercent);
           player.cpm = msg.cpm;
           player.wpm = msg.wpm;
           player.accuracy = msg.accuracy;
           player.combo = msg.combo;
-          player.isFinished = msg.isFinished;
+          player.isFinished = player.isFinished || msg.isFinished;
           if (msg.finishTime !== undefined) {
             player.finishTime = msg.finishTime;
           }
@@ -423,6 +444,22 @@ export class P2PRoomManager {
 
       case 'BATTLE_EVENT': {
         this.emit('onBattleEvent', msg.message, msg.eventType);
+        break;
+      }
+
+      case 'SETTLEMENT_COUNTDOWN': {
+        this.emit('onSettlementCountdown', msg.secondsLeft);
+        break;
+      }
+
+      case 'ALL_FINISHED': {
+        this.emit('onAllFinished');
+        break;
+      }
+
+      case 'LOBBY_SESSION_RESET': {
+        this.emit('onLobbySessionReset');
+        this.destroy();
         break;
       }
 
@@ -539,22 +576,59 @@ export class P2PRoomManager {
     }
   }
 
-  // 房主命令全員返回大廳
+  // 房主重返大廳：廣播重置信號，斷開並清除所有訪客連線，訪客需重輸房號方可加入
   public returnToLobby() {
     if (!this.isHost) return;
     this.settings.status = 'waiting';
-    this.players.forEach((p) => {
-      p.isReady = p.isHost;
-      p.currentProgress = 0;
-      p.overallPercent = 0;
-      p.questionIndex = 0;
-      p.isFinished = false;
-      p.finishTime = null;
-    });
 
-    this.broadcast({ type: 'RETURN_TO_LOBBY' });
+    // 廣播給所有連線中的訪客，通知對局結束重置
+    this.broadcast({ type: 'LOBBY_SESSION_RESET' });
+
+    // 關閉並清除所有訪客連線
+    this.connections.forEach((conn) => {
+      try {
+        conn.close();
+      } catch {}
+    });
+    this.connections.clear();
+
+    // 房主保留房間，自身進度與狀態重設歸零
+    const hostPlayer = this.players.find((p) => p.isHost) || this.players[0];
+    if (hostPlayer) {
+      hostPlayer.isReady = true;
+      hostPlayer.currentProgress = 0;
+      hostPlayer.overallPercent = 0;
+      hostPlayer.questionIndex = 0;
+      hostPlayer.cpm = 0;
+      hostPlayer.wpm = 0;
+      hostPlayer.accuracy = 100;
+      hostPlayer.combo = 0;
+      hostPlayer.isFinished = false;
+      hostPlayer.finishTime = null;
+      this.players = [hostPlayer];
+    }
+
     this.emit('onReturnToLobby');
     this.emit('onPlayerListChange', this.players, this.settings);
+  }
+
+  // 房主廣播超時倒數秒數
+  public sendSettlementCountdown(secondsLeft: number) {
+    if (!this.isHost) return;
+    this.broadcast({
+      type: 'SETTLEMENT_COUNTDOWN',
+      secondsLeft,
+    });
+    this.emit('onSettlementCountdown', secondsLeft);
+  }
+
+  // 房主廣播全員結算完成 (同步開啟結算畫面)
+  public sendAllFinished() {
+    if (!this.isHost) return;
+    this.broadcast({
+      type: 'ALL_FINISHED',
+    });
+    this.emit('onAllFinished');
   }
 
   // 廣播給所有連線 (Host 專用)

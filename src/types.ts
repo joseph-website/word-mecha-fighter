@@ -122,5 +122,9 @@ export type NetworkMessage =
       finishTime?: number;
     }
   | { type: 'BATTLE_EVENT'; message: string; eventType: 'clear' | 'combo' | 'finish' }
-  | { type: 'RETURN_TO_LOBBY' };
+  | { type: 'RETURN_TO_LOBBY' }
+  | { type: 'LOBBY_SESSION_RESET' }
+  | { type: 'SETTLEMENT_COUNTDOWN'; secondsLeft: number }
+  | { type: 'FORCE_SETTLE' }
+  | { type: 'ALL_FINISHED' };
 

@@ -82,6 +82,7 @@ interface TypingArenaProps {
     finishTime?: number;
   }) => void;
   multiplayerHeader?: React.ReactNode;
+  settlementCountdown?: number | null;
 }
 
 interface LaserBeam {
@@ -142,7 +143,9 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   isMultiplayer,
   onProgressTick,
   multiplayerHeader,
+  settlementCountdown,
 }) => {
+  const isChallengeFinishedRef = useRef<boolean>(false);
   const questionsRef = useRef(questions);
   useEffect(() => {
     questionsRef.current = questions;
@@ -395,7 +398,13 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
         // 若已是最後一題且無可替補之新題，則結算遊戲；否則前往下一題（包含剛補入的題目）
         if (questionIndex + 1 >= currentTotal) {
+          isChallengeFinishedRef.current = true;
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           const finalTimeSec = Math.max((Date.now() - (startTime || Date.now())) / 1000, 1);
+          setElapsedSeconds(finalTimeSec);
           const totalTarget = accumulatedTargetChars + currentTargetLen;
           const grossCPM = Math.round(accumulatedCorrect / (finalTimeSec / 60));
           const finalAcc =
@@ -469,10 +478,14 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     }, 1000);
   };
 
-  // 計時器運作
+  // 計時器運作 (通關後立即停止，防止 CPM 持續下滑)
   useEffect(() => {
-    if (startTime) {
+    if (startTime && !isChallengeFinishedRef.current) {
       timerRef.current = window.setInterval(() => {
+        if (isChallengeFinishedRef.current) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return;
+        }
         setElapsedSeconds((Date.now() - startTime) / 1000);
       }, 100);
     }
@@ -603,7 +616,13 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
     // 檢查是否所有題目皆已擊破
     if (questionIndex + 1 >= currentTotal) {
+      isChallengeFinishedRef.current = true;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       const finalTimeSec = Math.max((Date.now() - (startTime || Date.now())) / 1000, 1);
+      setElapsedSeconds(finalTimeSec);
       const grossCPM = Math.round(updatedTotalCorrect / (finalTimeSec / 60));
       
       // 方案 B：漏打字數視同未擊中，直接折抵最終準確率
@@ -853,22 +872,69 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${tenths}`;
   };
 
-  // 當打字送出評估或題目有進展時推播至多人頻道
+  // 多人連線進度智慧頻率調節 (650ms 節流 + 盲區過濾 + 1500ms 心跳，關鍵換題與連擊 0ms 零延遲)
+  // 徹底杜絕 6 人房每秒上百個封包造成的 WebRTC 頻道擁塞與垃圾回收 (GC) 微卡頓
+  const lastProgressTickRef = useRef<{
+    time: number;
+    qIdx: number;
+    combo: number;
+    overall: number;
+    cpm: number;
+  }>({ time: 0, qIdx: -1, combo: -1, overall: -1, cpm: -1 });
+
   useEffect(() => {
-    if (!onProgressTick || !isMultiplayer) return;
+    if (!onProgressTick || !isMultiplayer || isChallengeFinishedRef.current) return;
+    const now = Date.now();
+    const last = lastProgressTickRef.current;
+    
+    // 關鍵優先事件 (0ms 即時送出)：換題、5+ 連擊達成或中斷
+    const isQuestionTransition = last.qIdx !== questionIndex;
+    const isMajorComboEvent =
+      (currentCombo >= 5 && currentCombo !== last.combo) ||
+      (last.combo >= 5 && currentCombo === 0);
+    const isPriorityEvent = isQuestionTransition || isMajorComboEvent;
+
+    const timeElapsed = now - last.time;
     const curProg = targetText.length > 0 ? (evaluatedCharsCount / targetText.length) * 100 : 0;
     const overall = ((questionIndex + (targetText.length > 0 ? evaluatedCharsCount / targetText.length : 0)) / questions.length) * 100;
-    onProgressTick({
-      questionIndex,
-      currentProgress: Math.min(100, curProg),
-      overallPercent: Math.min(100, overall),
-      cpm: currentCPM,
-      wpm: Math.round(currentCPM / 2),
-      accuracy: currentAccuracy,
-      combo: currentCombo,
-      isFinished: false,
-    });
-  }, [evaluatedCharsCount, questionIndex, currentCPM, currentAccuracy, currentCombo, targetText.length, questions.length, onProgressTick, isMultiplayer]);
+
+    const deltaProg = Math.abs(overall - last.overall);
+    const deltaCPM = Math.abs(currentCPM - last.cpm);
+    const isHeartbeat = timeElapsed >= 1500;
+
+    // 優先事件立即發送；一般進度則需滿足 650ms 節流且有顯著進展 (進度變動 >= 1.5% 或 CPM 變動 >= 5 或 1.5 秒心跳保活)
+    if (isPriorityEvent || ((deltaProg >= 1.5 || deltaCPM >= 5 || isHeartbeat) && timeElapsed >= 650)) {
+      if (isChallengeFinishedRef.current) return;
+      lastProgressTickRef.current = {
+        time: now,
+        qIdx: questionIndex,
+        combo: currentCombo,
+        overall,
+        cpm: currentCPM,
+      };
+
+      onProgressTick({
+        questionIndex,
+        currentProgress: Math.min(100, curProg),
+        overallPercent: Math.min(100, overall),
+        cpm: currentCPM,
+        wpm: Math.round(currentCPM / 2),
+        accuracy: currentAccuracy,
+        combo: currentCombo,
+        isFinished: false,
+      });
+    }
+  }, [
+    evaluatedCharsCount,
+    questionIndex,
+    currentCPM,
+    currentAccuracy,
+    currentCombo,
+    targetText.length,
+    questions.length,
+    onProgressTick,
+    isMultiplayer,
+  ]);
 
   return (
     <div
@@ -893,6 +959,16 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           </div>
 
           <div className="flex items-center gap-2 font-mono text-xs">
+            {settlementCountdown !== undefined && settlementCountdown !== null && settlementCountdown > 0 && (
+              <span className={`px-2 py-0.5 rounded-lg text-[11px] sm:text-xs font-bold font-mono flex items-center gap-1 border animate-pulse ${
+                settlementCountdown <= 10
+                  ? 'bg-rose-950/80 border-rose-600/80 text-rose-300'
+                  : 'bg-amber-950/80 border-amber-600/80 text-amber-300'
+              }`}>
+                <Clock className="w-3 h-3 text-current" />
+                <span>結算倒數: {settlementCountdown}s</span>
+              </span>
+            )}
             <span className="text-stone-400 hidden xs:flex items-center gap-1">
               <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-400" />
               <strong className="text-sky-300">{formatTimer(elapsedSeconds)}</strong>
@@ -1010,7 +1086,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       <div
         id="sky-defense-battlefield"
         ref={skyContainerRef}
-        className="relative w-full h-[175px] xs:h-[210px] sm:h-[260px] md:h-[310px] lg:h-[360px] xl:h-[410px] max-h-[48dvh] sm:max-h-[50dvh] md:max-h-[52dvh] bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 border-2 border-stone-800 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-1.5 sm:p-3 md:p-4 shrink min-h-[150px]"
+        className="relative w-full flex-1 h-[150px] xs:h-[180px] sm:h-[220px] md:h-[270px] lg:h-[310px] xl:h-[360px] min-h-[140px] max-h-[36dvh] sm:max-h-[42dvh] md:max-h-[46dvh] bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 border-2 border-stone-800 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-1.5 sm:p-3 md:p-4 shrink"
         style={{
           backgroundImage: `radial-gradient(circle at 50% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 60%), radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px)`,
           backgroundSize: '100% 100%, 24px 24px',

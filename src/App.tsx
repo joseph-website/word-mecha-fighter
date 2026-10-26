@@ -18,6 +18,7 @@ const QuestionBankModal = React.lazy(() => import('./components/QuestionBankModa
 const InstructionModal = React.lazy(() => import('./components/InstructionModal').then((m) => ({ default: m.InstructionModal })));
 const MultiplayerLobby = React.lazy(() => import('./components/MultiplayerLobby').then((m) => ({ default: m.MultiplayerLobby })));
 const MultiplayerResultModal = React.lazy(() => import('./components/MultiplayerResultModal').then((m) => ({ default: m.MultiplayerResultModal })));
+const MultiplayerWaitingRoom = React.lazy(() => import('./components/MultiplayerWaitingRoom').then((m) => ({ default: m.MultiplayerWaitingRoom })));
 import {
   Difficulty,
   QuestionCount,
@@ -99,6 +100,44 @@ export default function App() {
     { id: string; text: string; type: 'clear' | 'combo' | 'finish' }[]
   >([]);
   const [multiplayerFinished, setMultiplayerFinished] = useState<boolean>(false);
+  const [myFinishedInMultiplayer, setMyFinishedInMultiplayer] = useState<boolean>(false);
+  const [settlementCountdown, setSettlementCountdown] = useState<number>(30);
+  const [isOfflineFallback, setIsOfflineFallback] = useState<boolean>(false);
+  const countdownTimerRef = useRef<number | null>(null);
+
+  const clearSettlementTimer = () => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+  };
+
+  const startSettlementCountdown = (customGraceSec?: number) => {
+    if (countdownTimerRef.current) return;
+    const duration = customGraceSec || settlementCountdown || 30;
+    setSettlementCountdown(duration);
+    p2pManager.sendSettlementCountdown(duration);
+
+    let currentSec = duration;
+    countdownTimerRef.current = window.setInterval(() => {
+      currentSec -= 1;
+      setSettlementCountdown(currentSec);
+      p2pManager.sendSettlementCountdown(currentSec);
+
+      if (currentSec <= 0) {
+        clearSettlementTimer();
+        p2pManager.sendAllFinished();
+        setMultiplayerFinished(true);
+      }
+    }, 1000);
+  };
+
+  const handleHostForceSettle = () => {
+    if (!p2pManager.isHost) return;
+    clearSettlementTimer();
+    p2pManager.sendAllFinished();
+    setMultiplayerFinished(true);
+  };
 
   // P2P 管理器實例
   const p2pRef = useRef<P2PRoomManager | null>(null);
@@ -141,28 +180,74 @@ export default function App() {
       onGameStart: (questions, startTime) => {
         setActiveQuestions(questions);
         setCurrentQuestionIndex(0);
+        setMyFinishedInMultiplayer(false);
         setMultiplayerFinished(false);
+        setSettlementCountdown(30);
+        clearSettlementTimer();
         setGameStatus('playing');
         setBattleEvents([]);
       },
       onProgressUpdate: (playerId, update) => {
-        setMultiplayerPlayers((prev) =>
-          prev.map((p) => (p.id === playerId ? { ...p, ...update } : p))
-        );
+        setMultiplayerPlayers((prev) => {
+          const next = prev.map((p) => (p.id === playerId ? { ...p, ...update } : p));
+          // 若為房主，檢查是否全員完賽或需要啟動 30 秒結算超時倒數
+          if (p2pManager.isHost) {
+            const allDone = next.length > 0 && next.every((p) => p.isFinished);
+            if (allDone) {
+              clearSettlementTimer();
+              p2pManager.sendAllFinished();
+              setMultiplayerFinished(true);
+            } else if (next.some((p) => p.isFinished)) {
+              startSettlementCountdown();
+            }
+          }
+          return next;
+        });
       },
       onBattleEvent: (text, type) => {
         const newEvent = { id: `${Date.now()}-${Math.random()}`, text, type };
         setBattleEvents((prev) => [...prev.slice(-3), newEvent]);
       },
+      onSettlementCountdown: (secondsLeft) => {
+        setSettlementCountdown(secondsLeft);
+      },
+      onAllFinished: () => {
+        clearSettlementTimer();
+        setMultiplayerFinished(true);
+      },
       onReturnToLobby: () => {
+        clearSettlementTimer();
+        setMyFinishedInMultiplayer(false);
         setMultiplayerFinished(false);
+        setSettlementCountdown(30);
         setGameStatus('idle');
         setActiveQuestions([]);
         setCurrentQuestionIndex(0);
       },
+      onLobbySessionReset: () => {
+        clearSettlementTimer();
+        setMyFinishedInMultiplayer(false);
+        setMultiplayerFinished(false);
+        setSettlementCountdown(30);
+        setGameStatus('idle');
+        setActiveQuestions([]);
+        setCurrentQuestionIndex(0);
+        setNoticeMessage('對局已結束，請重新輸入 6 位房號加入下一場！');
+        setTimeout(() => setNoticeMessage(null), 5000);
+      },
       onDisconnected: (reason) => {
+        clearSettlementTimer();
+        // 房主離線容錯保護：若客端仍在戰鬥中，無縫切換至單機模式讓玩家打完，結算個人成績
+        if (gameStatus === 'playing') {
+          setIsOfflineFallback(true);
+          setNoticeMessage('房主已離線，已為您無縫切換至本地挑戰模式，完成後將為您呈現個人成績！');
+          setTimeout(() => setNoticeMessage(null), 5000);
+          return;
+        }
+        setMyFinishedInMultiplayer(false);
         setNoticeMessage(reason || '與房間連線已中斷');
         setMultiplayerFinished(false);
+        setSettlementCountdown(30);
         setGameStatus('idle');
         setActiveQuestions([]);
         setCurrentQuestionIndex(0);
@@ -332,11 +417,38 @@ export default function App() {
     roundReviews?: RoundReviewItem[];
   }) => {
     setLatestStats(stats);
+    // 若為房主離線容錯模式，無縫轉入單人結算
+    if (isOfflineFallback) {
+      setIsOfflineFallback(false);
+      setGameMode('solo');
+      setGameStatus('completed');
+      p2pManager.destroy();
+      return;
+    }
+
     if (gameMode === 'multiplayer') {
       const me = multiplayerPlayers.find((p) => p.id === p2pManager.myPlayerId);
       const myName = me?.name || '我方戰士';
       p2pManager.sendBattleEvent(`🏆 ${myName} 已完成全部目標！`, 'finish');
-      setMultiplayerFinished(true);
+      setMyFinishedInMultiplayer(true);
+
+      if (p2pManager.isHost) {
+        const next = multiplayerPlayers.map((p) =>
+          p.id === p2pManager.myPlayerId
+            ? { ...p, isFinished: true, finishTime: Math.round(stats.timeElapsedSeconds * 10) / 10 }
+            : p
+        );
+        const allDone = next.length > 0 && next.every((p) => p.isFinished);
+        if (allDone) {
+          clearSettlementTimer();
+          p2pManager.sendAllFinished();
+          setMultiplayerFinished(true);
+        } else {
+          // 依房主作答時間為基準自動延長寬限時間：公式 Math.min(90, Math.max(30, Math.round(stats.timeElapsedSeconds * 0.5)))
+          const hostGrace = Math.min(90, Math.max(30, Math.round(stats.timeElapsedSeconds * 0.5)));
+          startSettlementCountdown(hostGrace);
+        }
+      }
     } else {
       setGameStatus('completed');
     }
@@ -367,11 +479,14 @@ export default function App() {
 
   // 中途放棄返回主選單
   const handleQuitGame = () => {
+    clearSettlementTimer();
+    setMyFinishedInMultiplayer(false);
+    setMultiplayerFinished(false);
+    setSettlementCountdown(30);
     setGameStatus('idle');
     setActiveQuestions([]);
     setCurrentQuestionIndex(0);
     setLatestStats(null);
-    setMultiplayerFinished(false);
   };
 
   // 重新再來一局 (單人)
@@ -379,25 +494,42 @@ export default function App() {
     handleStartSoloGame();
   };
 
-  // 多人房主讓全員回到房間大廳準備下一場
+  // 多人重返大廳：房主清除訪客連線並重置房間；訪客斷開並需重輸房號
   const handleReturnToMultiplayerLobby = () => {
-    p2pManager.returnToLobby();
+    clearSettlementTimer();
+    setMyFinishedInMultiplayer(false);
+    setMultiplayerFinished(false);
+    setSettlementCountdown(30);
+    setActiveQuestions([]);
+    setCurrentQuestionIndex(0);
+    setGameStatus('idle');
+
+    if (p2pManager.isHost) {
+      p2pManager.returnToLobby();
+    } else {
+      p2pManager.destroy();
+      setNoticeMessage('已返回大廳，請重新輸入 6 位房號以加入下一場！');
+      setTimeout(() => setNoticeMessage(null), 4000);
+    }
   };
 
   // 退出多人模式回到單人
   const handleQuitMultiplayer = () => {
+    clearSettlementTimer();
+    setMyFinishedInMultiplayer(false);
+    setMultiplayerFinished(false);
+    setSettlementCountdown(30);
     p2pManager.destroy();
     setGameMode('solo');
     setGameStatus('idle');
-    setMultiplayerFinished(false);
   };
 
   return (
     <div className={`h-[100dvh] max-h-[100dvh] bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-x-hidden ${
       gameStatus === 'playing' ? 'overflow-hidden' : 'overflow-y-auto sm:overflow-y-hidden'
     }`}>
-      {/* Global Navigation Header - 戰鬥中在手機與平板端自動收合，釋出全高給戰機與輸入框；非戰鬥或大型電腦端完整保留 */}
-      <div className={gameStatus === 'playing' ? 'hidden xl:block shrink-0' : 'w-full shrink-0'}>
+      {/* Global Navigation Header - 戰鬥中在矮螢幕 (垂直高度低於 850px)、筆電或手機端自動收合，釋出全高給戰機與輸入框；高解析高垂直螢幕或非戰鬥時完整保留 */}
+      <div className={gameStatus === 'playing' ? 'hidden [@media(min-width:1280px)_and_(min-height:850px)]:block shrink-0' : 'w-full shrink-0'}>
         <Header
           soundOn={soundOn}
           volume={volume}
@@ -478,6 +610,11 @@ export default function App() {
                 />
               ) : null
             }
+            settlementCountdown={
+              gameMode === 'multiplayer' && multiplayerPlayers.some((p) => p.isFinished)
+                ? settlementCountdown
+                : null
+            }
           />
         )}
 
@@ -498,7 +635,22 @@ export default function App() {
           </React.Suspense>
         )}
 
-        {/* === 5. 多人連線賽後頒獎台 === */}
+        {/* === 5. 多人連線戰情監控等待面板 (完成後等待全員結算) === */}
+        {gameMode === 'multiplayer' && myFinishedInMultiplayer && !multiplayerFinished && (
+          <React.Suspense fallback={null}>
+            <MultiplayerWaitingRoom
+              players={multiplayerPlayers}
+              myPlayerId={p2pManager.myPlayerId}
+              isHost={p2pManager.isHost}
+              settings={roomSettings}
+              secondsLeft={settlementCountdown}
+              onForceSettle={handleHostForceSettle}
+              onQuit={handleQuitMultiplayer}
+            />
+          </React.Suspense>
+        )}
+
+        {/* === 6. 多人連線賽後頒獎台 (全員完成/超時/房主強制結算後同步揭曉) === */}
         {gameMode === 'multiplayer' && multiplayerFinished && (
           <React.Suspense fallback={null}>
             <MultiplayerResultModal
